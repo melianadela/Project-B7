@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 
-// Cache the clients and credentials outside of the request handler
 const credentials = {
   type: process.env.type!,
   project_id: process.env.project_id!,
@@ -68,20 +67,47 @@ export async function GET(request: Request) {
     let filteredData = jsonData;
 
     if (statusFilter) {
-      filteredData = filteredData.filter(
-        (item) => item.status && item.status === statusFilter
-      );
+      filteredData = filteredData.filter((item) => {
+        const itemStatus = item.status?.trim().toLowerCase();
+        const filterStatus = statusFilter.trim().toLowerCase();
+        return itemStatus === filterStatus;
+      });
     }
 
     if (machineFilter) {
-      filteredData = filteredData.filter(
-        (item) => item.machine && item.machine === machineFilter
-      );
+      filteredData = filteredData.filter((item) => {
+        const itemMachine = item.mesin?.trim().toLowerCase();
+        const filterMachine = machineFilter.trim().toLowerCase();
+
+        if (itemMachine === filterMachine) {
+          return true;
+        }
+
+        if (/^\d+$/.test(filterMachine)) {
+          const escapedFilter = filterMachine.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&"
+          );
+          const regex = new RegExp(`\\b${escapedFilter}\\b`, "i");
+          return regex.test(itemMachine);
+        }
+
+        return itemMachine?.includes(filterMachine);
+      });
     }
 
     return NextResponse.json({
       success: true,
       data: filteredData,
+      // Debug info (hapus di production)
+      debug: {
+        totalRows: jsonData.length,
+        filteredRows: filteredData.length,
+        appliedFilters: {
+          machine: machineFilter,
+          status: statusFilter,
+        },
+      },
     });
   } catch (error) {
     console.error("Error fetching sheet data:", error);

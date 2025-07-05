@@ -82,8 +82,6 @@ const data = {
             title: "CHIMEI",
             items: [
               { title: "CHIMEI 1", url: "/dashboard/chimei/1" },
-              { title: "CHIMEI 2", url: "/dashboard/chimei/2" },
-              { title: "CHIMEI 3", url: "/dashboard/chimei/3" },
               { title: "CHIMEI 4", url: "/dashboard/chimei/4" },
               { title: "CHIMEI 5", url: "/dashboard/chimei/5" },
               { title: "CHIMEI 6", url: "/dashboard/chimei/6" },

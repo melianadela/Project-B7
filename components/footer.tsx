@@ -19,14 +19,14 @@ export default function Footer() {
           >
             Amanda
           </Link>
-          ,{" "}
+          ,
           <Link
             className="underline hover:text-black transition-colors font-medium"
             href="https://www.linkedin.com/in/armelia-agustin/"
           >
             Armelia
           </Link>
-          , and{" "}
+          , and
           <Link
             className="underline hover:text-black transition-colors font-medium"
             href="https://www.linkedin.com/in/danang-hapis-fadillah-682878202/"
