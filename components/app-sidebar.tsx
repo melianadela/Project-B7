@@ -2,15 +2,15 @@
 
 import * as React from "react";
 import {
-  Command,
-  Database,
   ChevronRight,
   Activity,
   Target,
   BrainCircuit,
   KanbanSquare,
+  Cog,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { NavUser } from "@/components/nav-user";
 import {
@@ -19,7 +19,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -39,125 +38,95 @@ const data = {
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
-  navDataSparepart: [
-    {
-      title: "Master Data",
-      url: "#",
-      icon: Database,
-      isActive: true,
-      items: [
-        {
-          title: "Spareparts List",
-          url: "/spareparts/lists",
-        },
-        {
-          title: "BPP",
-          url: "/spareparts/bpp",
-        },
-      ],
-    },
-  ],
-  navLifetime: [
-    {
-      title: "Lifetime",
-      url: "#",
-      icon: Activity,
-      isActive: true,
-      items: [
-        { title: "Overview", icon: Target, url: "/dashboard/projects" },
-        {
-          title: "Machines",
-          icon: BrainCircuit,
-          items: [
-            {
-              title: "ILAPAK",
-              url: "#",
-              items: [
-                { title: "ILAPAK 1", url: "/ilapak/1" },
-                { title: "ILAPAK 2", url: "/ilapak/2" },
-                { title: "ILAPAK 3", url: "/ilapak/3" },
-                { title: "ILAPAK 4", url: "/ilapak/4" },
-                { title: "ILAPAK 5", url: "/ilapak/5" },
-                { title: "ILAPAK 6", url: "/ilapak/6" },
-                { title: "ILAPAK 7", url: "/ilapak/7" },
-                { title: "ILAPAK 8", url: "/ilapak/8" },
-                { title: "ILAPAK 9", url: "/ilapak/9" },
-                { title: "ILAPAK 10", url: "/ilapak/10" },
-                { title: "ILAPAK 11", url: "/ilapak/11" },
-                { title: "ILAPAK 12", url: "/ilapak/12" },
-              ],
-            },
-            {
-              title: "SIG",
-              url: "#",
-              items: [
-                { title: "SIG 5", url: "/sig/5" },
-                { title: "SIG 6", url: "/sig/6" },
-              ],
-            },
-            {
-              title: "UNIFIL",
-              url: "#",
-              items: [
-                { title: "UNIFIL A", url: "/unifil/1" },
-                { title: "UNIFIL B", url: "/unifil/2" },
-              ],
-            },
-            {
-              title: "CHIMEI",
-              url: "#",
-              items: [
-                { title: "CHIMEI 1", url: "/chimei/1" },
-                { title: "CHIMEI 2", url: "/chimei/2" },
-                { title: "CHIMEI 3", url: "/chimei/3" },
-                { title: "CHIMEI 4", url: "/chimei/4" },
-                { title: "CHIMEI 5", url: "/chimei/5" },
-                { title: "CHIMEI 6", url: "/chimei/6" },
-                { title: "CHIMEI 7", url: "/chimei/7" },
-                { title: "CHIMEI 8", url: "/chimei/8" },
-                { title: "CHIMEI 9", url: "/chimei/9" },
-                { title: "CHIMEI 10", url: "/chimei/10" },
-                { title: "CHIMEI 11", url: "/chimei/11" },
-                { title: "CHIMEI 12", url: "/chimei/12" },
-              ],
-            },
-            {
-              title: "JINSUNG",
-              url: "#",
-              items: [
-                { title: "JINSUNG 1", url: "/jinsung/1" },
-                { title: "JINSUNG 2", url: "/jinsung/2" },
-                { title: "JINSUNG 3", url: "/jinsung/3" },
-                { title: "JINSUNG 4", url: "/jinsung/4" },
-                { title: "JINSUNG 5", url: "/jinsung/5" },
-              ],
-            },
-            {
-              title: "JIHCHENG",
-              url: "#",
-              items: [],
-            },
-            {
-              title: "COSMEC",
-              url: "#",
-              items: [],
-            },
-            {
-              title: "FBD",
-              url: "#",
-              items: [
-                { title: "FBD GLAT", url: "/fbd/glat" },
-                { title: "FBD 2", url: "/fbd/2" },
-                { title: "FBD 3", url: "/fbd/3" },
-                { title: "FBD 4", url: "/fbd/4" },
-                { title: "FBD 6", url: "/fbd/6" },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ],
+  navLifetime: {
+    title: "Lifetime",
+    icon: Activity,
+    links: [{ title: "Overview", icon: Target, url: "/dashboard/projects" }],
+    categories: [
+      {
+        title: "Machines",
+        icon: BrainCircuit,
+        items: [
+          {
+            title: "ILAPAK",
+            items: [
+              { title: "ILAPAK 1", url: "/dashboard/ilapak/1" },
+              { title: "ILAPAK 2", url: "/dashboard/ilapak/2" },
+              { title: "ILAPAK 3", url: "/dashboard/ilapak/3" },
+              { title: "ILAPAK 4", url: "/dashboard/ilapak/4" },
+              { title: "ILAPAK 5", url: "/dashboard/ilapak/5" },
+              { title: "ILAPAK 6", url: "/dashboard/ilapak/6" },
+              { title: "ILAPAK 7", url: "/dashboard/ilapak/7" },
+              { title: "ILAPAK 8", url: "/dashboard/ilapak/8" },
+              { title: "ILAPAK 9", url: "/dashboard/ilapak/9" },
+              { title: "ILAPAK 10", url: "/dashboard/ilapak/10" },
+              { title: "ILAPAK 11", url: "/dashboard/ilapak/11" },
+              { title: "ILAPAK 12", url: "/dashboard/ilapak/12" },
+            ],
+          },
+          {
+            title: "SIG",
+            items: [
+              { title: "SIG 5", url: "/dashboard/sig/5" },
+              { title: "SIG 6", url: "/dashboard/sig/6" },
+            ],
+          },
+          {
+            title: "UNIFILL",
+            items: [
+              { title: "UNIFILL A", url: "/dashboard/unifill/A" },
+              { title: "UNIFILL B", url: "/dashboard/unifill/B" },
+            ],
+          },
+          {
+            title: "CHIMEI",
+            items: [
+              { title: "CHIMEI 1", url: "/dashboard/chimei/1" },
+              { title: "CHIMEI 2", url: "/dashboard/chimei/2" },
+              { title: "CHIMEI 3", url: "/dashboard/chimei/3" },
+              { title: "CHIMEI 4", url: "/dashboard/chimei/4" },
+              { title: "CHIMEI 5", url: "/dashboard/chimei/5" },
+              { title: "CHIMEI 6", url: "/dashboard/chimei/6" },
+              { title: "CHIMEI 7", url: "/dashboard/chimei/7" },
+              { title: "CHIMEI 8", url: "/dashboard/chimei/8" },
+              { title: "CHIMEI 9", url: "/dashboard/chimei/9" },
+              { title: "CHIMEI 10", url: "/dashboard/chimei/10" },
+              { title: "CHIMEI 11", url: "/dashboard/chimei/11" },
+              { title: "CHIMEI 12", url: "/dashboard/chimei/12" },
+            ],
+          },
+          {
+            title: "JINSUNG",
+            items: [
+              { title: "JINSUNG 1", url: "/dashboard/jinsung/1" },
+              { title: "JINSUNG 2", url: "/dashboard/jinsung/2" },
+              { title: "JINSUNG 3", url: "/dashboard/jinsung/3" },
+              { title: "JINSUNG 4", url: "/dashboard/jinsung/4" },
+              { title: "JINSUNG 5", url: "/dashboard/jinsung/5" },
+            ],
+          },
+          {
+            title: "JIHCHENG",
+            url: "/dashboard/jihcheng/_",
+          },
+          {
+            title: "COSMEC",
+            url: "/dashboard/cosmec/_",
+          },
+          {
+            title: "FBD",
+            items: [
+              { title: "FBD GLAT", url: "/dashboard/fbd/glat" },
+              { title: "FBD 2", url: "/dashboard/fbd/2" },
+              { title: "FBD 3", url: "/dashboard/fbd/3" },
+              { title: "FBD 4", url: "/dashboard/fbd/4" },
+              { title: "FBD 6", url: "/dashboard/fbd/6" },
+            ],
+          },
+        ],
+      },
+    ],
+  },
   navKanban: [
     {
       title: "Kanban",
@@ -165,181 +134,256 @@ const data = {
       icon: KanbanSquare,
       isActive: false,
       items: [
-        { title: "Tasks", url: "/dashboard/tasks" },
-        { title: "Projects", url: "/dashboard/projects" },
-        { title: "Teams", url: "/dashboard/teams" },
+        { title: "Internal", url: "/dashboard/tasks" },
+        { title: "External", url: "/dashboard/projects" },
       ],
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [open, setOpen] = React.useState<Record<string, boolean>>({});
+  const pathname = usePathname();
+
+  const toggleOpen = (title: string) => {
+    setOpen((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  const isActiveLink = (url: string) => {
+    return pathname === url;
+  };
+
   return (
     <Sidebar variant="inset" {...props}>
       {/* Header */}
-      <SidebarHeader>
+      <SidebarHeader className="border-b">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link href="#" className="flex items-center gap-3 px-3 py-2">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="sizxs-4" />
+                  <Cog className="size-5" />
                 </div>
-                <div className="grid flex-1 text-left leading-tight">
-                  <span className="truncate font-medium">E-Ject</span>
-                  <span className="truncate text-xs">Engineering Projects</span>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-sm">E-Ject</span>
+                  <span className="text-xs text-muted-foreground">
+                    Engineering Projects
+                  </span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      {/* Sidebar Content */}
-      <SidebarContent>
+      {/* Content */}
+      <SidebarContent className="px-2 -space-y-5">
+        {/* Lifetime Section */}
         <SidebarGroup>
-          <SidebarGroupLabel>Spareparts</SidebarGroupLabel>
           <SidebarGroupContent>
-            {/* Nav for Main */}
-            <SidebarGroup className="-mt-4">
-              <SidebarMenu>
-                {data.navDataSparepart.map((nav) => (
-                  <SidebarMenuItem key={nav.title}>
-                    <SidebarMenuButton size="lg" asChild>
-                      <Link href={nav.url}>
-                        <div className="flex items-center">
-                          <nav.icon className="size-4" />
-                          <span className="ml-2">{nav.title}</span>
-                        </div>
-                      </Link>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Collapsible
+                  open={open[data.navLifetime.title] || false}
+                  onOpenChange={() => toggleOpen(data.navLifetime.title)}
+                >
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className="w-full justify-between hover:bg-muted">
+                      <div className="flex items-center gap-3">
+                        <data.navLifetime.icon className="size-4" />
+                        <span className="font-medium">
+                          {data.navLifetime.title}
+                        </span>
+                      </div>
+                      <ChevronRight
+                        className={`size-4 transition-transform duration-200 ${
+                          open[data.navLifetime.title] ? "rotate-90" : ""
+                        }`}
+                      />
                     </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub className="ml-6">
+                      {/* Direct Links */}
+                      {data.navLifetime.links.map((link) => (
+                        <SidebarMenuSubItem key={link.title}>
+                          <Link href={link.url}>
+                            <SidebarMenuButton
+                              size="sm"
+                              className={`w-full justify-start hover:bg-muted ${
+                                isActiveLink(link.url) ? "bg-slate-200" : ""
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <link.icon className="size-4" />
+                                <span className="text-sm">{link.title}</span>
+                              </div>
+                            </SidebarMenuButton>
+                          </Link>
+                        </SidebarMenuSubItem>
+                      ))}
 
-                    {nav.items && (
-                      <SidebarMenuSub>
+                      {/* Categories */}
+                      {data.navLifetime.categories.map((category) => (
+                        <SidebarMenuSubItem key={category.title}>
+                          <Collapsible
+                            open={open[category.title] || false}
+                            onOpenChange={() => toggleOpen(category.title)}
+                          >
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuButton
+                                size="sm"
+                                className="w-full justify-between hover:bg-muted"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <category.icon className="size-4" />
+                                  <span className="text-sm font-medium">
+                                    {category.title}
+                                  </span>
+                                </div>
+                                <ChevronRight
+                                  className={`size-4 transition-transform duration-200 ${
+                                    open[category.title] ? "rotate-90" : ""
+                                  }`}
+                                />
+                              </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="mt-1">
+                              <SidebarMenuSub className="ml-6 space-y-1">
+                                {category.items.map((machine) => (
+                                  <SidebarMenuSubItem key={machine.title}>
+                                    {machine.items &&
+                                    machine.items.length > 0 ? (
+                                      <Collapsible
+                                        open={open[machine.title] || false}
+                                        onOpenChange={() =>
+                                          toggleOpen(machine.title)
+                                        }
+                                      >
+                                        <CollapsibleTrigger asChild>
+                                          <SidebarMenuButton
+                                            size="sm"
+                                            className="w-full justify-between hover:bg-muted"
+                                          >
+                                            <span className="text-sm">
+                                              {machine.title}
+                                            </span>
+                                            <ChevronRight
+                                              className={`size-4 transition-transform duration-200 ${
+                                                open[machine.title]
+                                                  ? "rotate-90"
+                                                  : ""
+                                              }`}
+                                            />
+                                          </SidebarMenuButton>
+                                        </CollapsibleTrigger>
+                                        <CollapsibleContent className="mt-1">
+                                          <SidebarMenuSub className="ml-6 space-y-1">
+                                            {machine.items.map((subItem) => (
+                                              <SidebarMenuSubItem
+                                                key={subItem.title}
+                                              >
+                                                <Link href={subItem.url}>
+                                                  <SidebarMenuButton
+                                                    size="sm"
+                                                    className={`w-28 justify-start hover:bg-muted ${
+                                                      isActiveLink(subItem.url)
+                                                        ? "bg-slate-200"
+                                                        : ""
+                                                    }`}
+                                                  >
+                                                    <span className="text-sm">
+                                                      {subItem.title}
+                                                    </span>
+                                                  </SidebarMenuButton>
+                                                </Link>
+                                              </SidebarMenuSubItem>
+                                            ))}
+                                          </SidebarMenuSub>
+                                        </CollapsibleContent>
+                                      </Collapsible>
+                                    ) : (
+                                      <Link href={machine.url!}>
+                                        <SidebarMenuButton
+                                          size="sm"
+                                          className={`w-full justify-start hover:bg-muted ${
+                                            isActiveLink(machine.url!)
+                                              ? "bg-slate-200"
+                                              : ""
+                                          }`}
+                                        >
+                                          <span className="text-sm">
+                                            {machine.title}
+                                          </span>
+                                        </SidebarMenuButton>
+                                      </Link>
+                                    )}
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </Collapsible>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Kanban Section */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {data.navKanban.map((nav) => (
+                <SidebarMenuItem key={nav.title}>
+                  <Collapsible
+                    open={open[nav.title] || false}
+                    onOpenChange={() => toggleOpen(nav.title)}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="w-full justify-between hover:bg-muted">
+                        <div className="flex items-center gap-3">
+                          <nav.icon className="size-4" />
+                          <span className="font-medium">{nav.title}</span>
+                        </div>
+                        <ChevronRight
+                          className={`size-4 transition-transform duration-200 ${
+                            open[nav.title] ? "rotate-90" : ""
+                          }`}
+                        />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-1">
+                      <SidebarMenuSub className="ml-6 space-y-1">
                         {nav.items.map((item) => (
                           <SidebarMenuSubItem key={item.title}>
-                            <Link
-                              href={item.url}
-                              className="text-sm pl-4 pr-2 py-1 block hover:bg-accent rounded"
-                            >
-                              {item.title}
+                            <Link href={item.url}>
+                              <SidebarMenuButton
+                                size="sm"
+                                className={`w-full justify-start hover:bg-muted ${
+                                  isActiveLink(item.url) ? "bg-slate-200" : ""
+                                }`}
+                              >
+                                <span className="text-sm">{item.title}</span>
+                              </SidebarMenuButton>
                             </Link>
                           </SidebarMenuSubItem>
                         ))}
                       </SidebarMenuSub>
-                    )}
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroup>
-            {/* Nav for Lifetime */}
-            <SidebarGroup className="-mt-4">
-              <SidebarMenu>
-                {data.navLifetime.map((nav) => (
-                  <SidebarMenuItem key={nav.title}>
-                    <SidebarMenuButton size="lg" asChild>
-                      <Link href={nav.url}>
-                        <div className="flex items-center">
-                          <nav.icon className="size-4" />
-                          <span className="ml-2">{nav.title}</span>
-                        </div>
-                      </Link>
-                    </SidebarMenuButton>
-
-                    {nav.items && (
-                      <SidebarMenuSub>
-                        {nav.items.map((item) => (
-                          <Collapsible
-                            key={item.title}
-                            defaultOpen={false}
-                            className="group/collapsible"
-                          >
-                            <SidebarMenuItem>
-                              <CollapsibleTrigger asChild>
-                                <div className="flex items-center w-full pr-2 py-1 text-sm cursor-pointer hover:bg-muted rounded-md">
-                                  <item.icon className="size-4 mr-2" />
-                                  <span className="flex-1">{item.title}</span>
-                                  {item.items && item.items.length > 0 && (
-                                    <ChevronRight className="ml-2 transition-transform group-data-[state=open]/collapsible:rotate-90 size-4" />
-                                  )}
-                                </div>
-                              </CollapsibleTrigger>
-
-                              {item.items && item.items.length > 0 && (
-                                <CollapsibleContent className="pl-2">
-                                  {item.items.map((machine) => (
-                                    <Collapsible
-                                      key={machine.title}
-                                      defaultOpen={false}
-                                      className="group/collapsible"
-                                    >
-                                      <CollapsibleTrigger asChild>
-                                        <div className="flex items-center w-full pl-4 pr-2 py-1 text-xs cursor-pointer hover:bg-muted rounded-md my-1.5">
-                                          <span className="flex-1">
-                                            {machine.title}
-                                          </span>
-                                          {machine.items &&
-                                            machine.items.length > 0 && (
-                                              <ChevronRight className="transition-transform group-data-[state=open]/collapsible:rotate-90 size-3" />
-                                            )}
-                                        </div>
-                                      </CollapsibleTrigger>
-
-                                      {machine.items &&
-                                        machine.items.length > 0 && (
-                                          <CollapsibleContent className="pl-">
-                                            <SidebarMenuSub>
-                                              {machine.items.map((subItem) => (
-                                                <SidebarMenuSubItem
-                                                  key={subItem.title}
-                                                >
-                                                  <Link
-                                                    href={subItem.url}
-                                                    className="text-xs pl-4 pr-2 py-1 block hover:bg-accent rounded"
-                                                  >
-                                                    {subItem.title}
-                                                  </Link>
-                                                </SidebarMenuSubItem>
-                                              ))}
-                                            </SidebarMenuSub>
-                                          </CollapsibleContent>
-                                        )}
-                                    </Collapsible>
-                                  ))}
-                                </CollapsibleContent>
-                              )}
-                            </SidebarMenuItem>
-                          </Collapsible>
-                        ))}
-                      </SidebarMenuSub>
-                    )}
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroup>
-            {/* Nav for Kanban */}
-            <SidebarGroup className="-mt-4">
-              <SidebarMenu>
-                {data.navKanban.map((nav) => (
-                  <SidebarMenuItem key={nav.title}>
-                    <SidebarMenuButton size="lg" asChild>
-                      <Link href={nav.url}>
-                        <div className="flex items-center">
-                          <nav.icon className="size-4" />
-                          <span className="ml-2">{nav.title}</span>
-                        </div>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroup>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter>
+      <SidebarFooter className="border-t">
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
