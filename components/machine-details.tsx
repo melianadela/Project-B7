@@ -258,14 +258,14 @@ export function OverdueTable({ data }: OverdueTableProps) {
       <BorderBeam
         duration={6}
         size={400}
-        className="from-transparent via-slate-700 to-transparent"
+        className="from-transparent via-slate-600 to-transparent"
       />
       <BorderBeam
         duration={6}
         delay={3}
         size={400}
         borderWidth={2}
-        className="from-transparent via-slate-700 to-transparent"
+        className="from-transparent via-slate-600 to-transparent"
       />
       <CardHeader className="items-center pb-0">
         <CardTitle>Sparepart Overdue</CardTitle>
@@ -374,10 +374,8 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
                   <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
               </Pie>
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <ChartLegend
-                content={<ChartLegendContent payload={validData} />}
-              />
+              <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+              <ChartLegend content={<ChartLegendContent nameKey="name" />} />
             </PieChart>
           </ChartContainer>
         ) : (
