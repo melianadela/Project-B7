@@ -6,7 +6,7 @@ import {
   PieChartDistribution,
   OverdueTable,
   SparepartTable,
-} from "@/components/machine-stats-cards";
+} from "@/components/machine-details";
 import { useSheetData } from "@/hooks/use-sheet-data";
 import { useEffect, useState } from "react";
 
@@ -23,6 +23,11 @@ interface Sparepart {
   tanggungjawab: string;
 }
 
+interface Distribution {
+  name: string;
+  value: number;
+}
+
 export default function MachineDashboardPage() {
   const params = useParams<{ worksheet: string; id: string }>();
   const worksheetName = params.worksheet.toUpperCase();
@@ -36,7 +41,9 @@ export default function MachineDashboardPage() {
     machine: machineName.split(" ")[1],
   });
 
-  const [sparepartDistribution, setSparepartDistribution] = useState<any[]>([]);
+  const [sparepartDistribution, setSparepartDistribution] = useState<
+    Distribution[]
+  >([]);
   const [overdueSpareparts, setOverdueSpareparts] = useState<Sparepart[]>([]);
   const [machineSpareparts, setMachineSpareparts] = useState<Sparepart[]>([]);
 
@@ -74,7 +81,9 @@ export default function MachineDashboardPage() {
       <h1 className="text-3xl font-bold">{machineName}</h1>
       <MachineStatsCards worksheet={worksheetName} machine={machineName} />
       <div className="mt-10">
-        <h3 className="mb-5 text-2xl font-semibold">Chart and Table</h3>
+        <h3 className="mb-5 text-2xl font-semibold">
+          Distribution & Overdue Spareparts
+        </h3>
         <div className="grid grid-cols-2 gap-10">
           <PieChartDistribution data={sparepartDistribution} />
           <OverdueTable data={overdueSpareparts} />

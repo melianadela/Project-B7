@@ -29,6 +29,15 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "./ui/chart";
+import { Input } from "./ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { BorderBeam } from "./magicui/border-beam";
 
 interface Sparepart {
   mesin: string;
@@ -51,7 +60,7 @@ interface MachineStatsCardsProps {
 interface PieChartData {
   name: string;
   value: number;
-  fill: string;
+  fill?: string;
 }
 
 interface OverdueTableProps {
@@ -65,6 +74,60 @@ interface PieChartDistributionProps {
 interface SparepartTableProps {
   data: Sparepart[];
 }
+
+const StatusLabel = ({ status }: { status: string }) => {
+  let color = "";
+  switch (status) {
+    case "Melewati Jadwal Penggantian":
+      color = "bg-red-100 text-red-500";
+      break;
+    case "Segera Jadwalkan Penggantian":
+      color = "bg-yellow-100 text-yellow-600";
+      break;
+    default:
+      color = "bg-gray-50 text-black";
+  }
+  return <span className={`px-5 py-1 rounded-full ${color}`}>{status}</span>;
+};
+
+const CategoryLabel = ({ category }: { category: string }) => {
+  let color = "";
+  switch (category) {
+    case "Vital":
+      color = "bg-red-100 text-red-500";
+      break;
+    case "Desirable":
+      color = "bg-green-100 text-green-500";
+      break;
+    case "Essential":
+      color = "bg-yellow-100 text-yellow-500";
+      break;
+    default:
+      color = "";
+  }
+  return <span className={`px-2 py-1 rounded-full ${color}`}>{category}</span>;
+};
+
+const ResponsibilityLabel = ({
+  responsibility,
+}: {
+  responsibility: string;
+}) => {
+  let color = "";
+  switch (responsibility) {
+    case "PM":
+      color = "bg-indigo-500 text-white";
+      break;
+    case "AM":
+      color = "bg-pink-500 text-white";
+      break;
+    default:
+      color = "bg-gray-50 text-black";
+  }
+  return (
+    <span className={`px-2 py-1 rounded-full ${color}`}>{responsibility}</span>
+  );
+};
 
 export function MachineStatsCards({
   worksheet,
@@ -191,7 +254,19 @@ export function OverdueTable({ data }: OverdueTableProps) {
   const currentData = data.slice(startIndex, endIndex);
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col overflow-hidden relative">
+      <BorderBeam
+        duration={6}
+        size={400}
+        className="from-transparent via-slate-700 to-transparent"
+      />
+      <BorderBeam
+        duration={6}
+        delay={3}
+        size={400}
+        borderWidth={2}
+        className="from-transparent via-slate-700 to-transparent"
+      />
       <CardHeader className="items-center pb-0">
         <CardTitle>Sparepart Overdue</CardTitle>
         <CardDescription>
@@ -214,7 +289,9 @@ export function OverdueTable({ data }: OverdueTableProps) {
               <TableRow key={index}>
                 <TableCell>{sparepart.kodepart}</TableCell>
                 <TableCell>{sparepart.part}</TableCell>
-                <TableCell>{sparepart.category}</TableCell>
+                <TableCell>
+                  <CategoryLabel category={sparepart.category} />
+                </TableCell>
                 <TableCell>{sparepart["lifetime(bulan)"]}</TableCell>
                 <TableCell>{sparepart.penggantianterakhir}</TableCell>
               </TableRow>
@@ -253,7 +330,7 @@ export function OverdueTable({ data }: OverdueTableProps) {
 
 export function PieChartDistribution({ data }: PieChartDistributionProps) {
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
-
+  console.log(data);
   const chartConfig = {
     sparepart: {
       label: "Sparepart",
@@ -289,27 +366,17 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
         {validData.length > 0 ? (
           <ChartContainer
             config={chartConfig}
-            className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[440px] pb-0"
+            className="mx-auto aspect-square max-h-[400px]"
           >
-            <PieChart>
-              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              <Pie
-                data={validData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={60}
-                strokeWidth={5}
-                cx="50%"
-                cy="50%"
-                outerRadius={120}
-              >
+            <PieChart accessibilityLayer data={validData}>
+              <Pie dataKey="value" innerRadius={60} outerRadius={120}>
                 {validData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
               </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
               <ChartLegend
-                content={<ChartLegendContent nameKey="name" payload={data} />}
-                className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"
+                content={<ChartLegendContent payload={validData} />}
               />
             </PieChart>
           </ChartContainer>
@@ -325,12 +392,26 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
 
 export function SparepartTable({ data }: SparepartTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [responsibilityFilter, setResponsibilityFilter] = useState("all");
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(data.length / itemsPerPage);
 
+  const filteredData = data.filter(
+    (item) =>
+      (item.part.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.kodepart.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (categoryFilter === "all" || item.category === categoryFilter) &&
+      (statusFilter === "all" || item.status === statusFilter) &&
+      (responsibilityFilter === "all" ||
+        item.tanggungjawab === responsibilityFilter)
+  );
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentData = data.slice(startIndex, endIndex);
+  const currentData = filteredData.slice(startIndex, endIndex);
 
   return (
     <Card className="flex flex-col">
@@ -341,6 +422,52 @@ export function SparepartTable({ data }: SparepartTableProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
+        <div className="flex items-center py-4 gap-2">
+          <Input
+            placeholder="Search by part name or code..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            className="max-w-sm"
+          />
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="Vital">Vital</SelectItem>
+              <SelectItem value="Desirable">Desirable</SelectItem>
+              <SelectItem value="Essential">Essential</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="Segera Jadwalkan Penggantian">
+                Segera Jadwalkan Penggantian
+              </SelectItem>
+              <SelectItem value="Melewati Jadwal Penggantian">
+                Melewati Jadwal Penggantian
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={responsibilityFilter}
+            onValueChange={setResponsibilityFilter}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Responsibility" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Responsibilities</SelectItem>
+              <SelectItem value="PM">PM</SelectItem>
+              <SelectItem value="AM">AM</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -361,12 +488,20 @@ export function SparepartTable({ data }: SparepartTableProps) {
                 <TableCell>{sparepart.kodepart}</TableCell>
                 <TableCell>{sparepart.part}</TableCell>
                 <TableCell>{sparepart.qty}</TableCell>
-                <TableCell>{sparepart.category}</TableCell>
+                <TableCell>
+                  <CategoryLabel category={sparepart.category} />
+                </TableCell>
                 <TableCell>{sparepart["lifetime(bulan)"]}</TableCell>
                 <TableCell>{sparepart.penggantianterakhir}</TableCell>
                 <TableCell>{sparepart.penggantianselanjutnya}</TableCell>
-                <TableCell>{sparepart.status}</TableCell>
-                <TableCell>{sparepart.tanggungjawab}</TableCell>
+                <TableCell>
+                  <StatusLabel status={sparepart.status} />
+                </TableCell>
+                <TableCell>
+                  <ResponsibilityLabel
+                    responsibility={sparepart.tanggungjawab}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

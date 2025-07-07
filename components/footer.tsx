@@ -4,8 +4,8 @@ import React from "react";
 
 export default function Footer() {
   return (
-    <footer className="fixed bottom-0 w-full border-t py-3 text-sm text-gray-900 mb-1 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between px-4 gap-2">
+    <footer className="fixed bottom-0 w-full border-t py-3 text-sm backdrop-blur-md bg-black/50">
+      <div className="mx-auto flex max-w-4xl flex-wrap items-center px-4 gap-2">
         <span className="flex items-center">
           © 2025 | built with{" "}
           <HeartFilledIcon className="ml-1 text-pink-500 animate-pulse" />
