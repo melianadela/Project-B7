@@ -330,7 +330,6 @@ export function OverdueTable({ data }: OverdueTableProps) {
 
 export function PieChartDistribution({ data }: PieChartDistributionProps) {
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
-  console.log(data);
   const chartConfig = {
     sparepart: {
       label: "Sparepart",
@@ -351,9 +350,9 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
 
   const validData = data
     .filter((item) => item.value > 0)
-    .map((item, index) => ({
+    .map((item) => ({
       ...item,
-      fill: COLORS[index % COLORS.length],
+      fill: chartConfig[item.name]?.color || "#CCCCCC",
     }));
 
   return (
