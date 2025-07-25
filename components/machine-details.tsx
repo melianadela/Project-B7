@@ -333,6 +333,7 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
   const chartConfig = {
     sparepart: {
       label: "Sparepart",
+      color: "#CCCCCC",
     },
     "Sparepart yang akan habis umur": {
       label: "Sparepart yang akan habis umur",
@@ -352,7 +353,7 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
     .filter((item) => item.value > 0)
     .map((item) => ({
       ...item,
-      fill: chartConfig[item.name]?.color || "#CCCCCC",
+      fill: chartConfig[item.name as keyof typeof chartConfig]?.color || "#CCCCCC",
     }));
 
   return (

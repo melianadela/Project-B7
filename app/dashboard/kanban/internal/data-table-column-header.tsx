@@ -23,7 +23,6 @@ interface DataTableColumnHeaderProps<TData, TValue>
 }
 
 export function DataTableColumnHeader<TData, TValue>({
-  //TODO: MAKE THIS REUSABLE
   column,
   title,
   className,

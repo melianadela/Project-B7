@@ -131,33 +131,111 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function PATCH(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const worksheetName = searchParams.get("worksheet") || "Sheet1";
-    const range = searchParams.get("range") || "A:Z";
+    const kodepart = searchParams.get("kodepart");
+
+    console.log("kodepart:", kodepart); // Debug log
+
+    // Validasi kodepart
+    if (!kodepart || kodepart.trim() === "") {
+      return NextResponse.json(
+        { success: false, error: "kodepart parameter is required" },
+        { status: 400 }
+      );
+    }
 
     const sheets = createSheetsClient();
-    const body = await request.json();
-    const { values } = body;
 
-    const response = await sheets.spreadsheets.values.append({
+    // Ambil semua data untuk mencari baris dengan kodepart yang sesuai
+    const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.sheet_id!,
-      range: `${worksheetName}!${range}`,
-      valueInputOption: "USER_ENTERED",
+      range: `${worksheetName}!A:Z`,
+    });
+
+    const rows = response.data.values || [];
+    if (rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Sheet kosong" },
+        { status: 404 }
+      );
+    }
+
+    // Cari kolom kodepart (asumsi kolom A, bisa disesuaikan)
+    const headerRow = rows[1];
+    const kodepartColumnIndex = headerRow.findIndex((header) =>
+      header?.toLowerCase().trim().includes("kode")
+    );
+
+    if (kodepartColumnIndex === -1) {
+      return NextResponse.json(
+        { success: false, error: "Kolom kodepart tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
+    // Cari baris dengan kodepart yang sesuai (mulai dari baris 2, index 1)
+    const targetRows: number[] = [];
+    for (let i = 1; i < rows.length; i++) {
+      const rowKodepart = rows[i][kodepartColumnIndex]?.toString().trim();
+      if (rowKodepart === kodepart) {
+        targetRows.push(i + 1); // +1 karena sheet dimulai dari 1
+      }
+    }
+
+    if (targetRows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: `Kodepart '${kodepart}' tidak ditemukan` },
+        { status: 404 }
+      );
+    }
+
+    // Kolom K, L, M (index 10, 11, 12)
+    const columnIndexes = [10, 11, 12]; // K, L, M
+    const columnNames = ["Untuk Bulan", "Status", "Deadline Pemesanan"];
+
+    // Siapkan batch update untuk kolom K, L, M
+    const batchUpdateRequests = [];
+
+    for (const rowNumber of targetRows) {
+      // Kolom K - kosongkan
+      batchUpdateRequests.push({
+        range: `${worksheetName}!K${rowNumber}`,
+        values: [[""]],
+      });
+
+      // Kolom L - isi dengan "✅ Cukup"
+      batchUpdateRequests.push({
+        range: `${worksheetName}!L${rowNumber}`,
+        values: [["✅ Cukup"]],
+      });
+
+      // Kolom M - kosongkan
+      batchUpdateRequests.push({
+        range: `${worksheetName}!M${rowNumber}`,
+        values: [[""]],
+      });
+    }
+
+    // Execute batch update
+    const batchResponse = await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: process.env.sheet_id!,
       requestBody: {
-        values: [values],
+        valueInputOption: "USER_ENTERED",
+        data: batchUpdateRequests,
       },
     });
 
     return NextResponse.json({
       success: true,
-      data: response.data,
+      message: `${kodepart} berhasil di update`,
     });
   } catch (error) {
-    console.error("Error adding data to sheet:", error);
+    console.error("Error clearing columns:", error);
     return NextResponse.json(
-      { success: false, error: "Gagal menambahkan data ke spreadsheet" },
+      { success: false, error: "Gagal mengosongkan kolom" },
       { status: 500 }
     );
   }

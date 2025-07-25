@@ -12,7 +12,7 @@ import {
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
 import { Button } from "@/components/ui/button";
-import { CheckIcon, LoaderCircle, LoaderPinwheel, X } from "lucide-react";
+import { CheckIcon, HourglassIcon, LoaderCircle, X } from "lucide-react";
 import { ShineBorder } from "@/components/magicui/shine-border";
 
 export interface KanbanData {
@@ -99,7 +99,7 @@ export default function Kanban() {
 
   return (
     <>
-      <header className="mx-20  ">
+      <header className="mx-auto">
         <h1 className="text-4xl font-semibold mb-4">Kanban Internal</h1>
         <div className="flex flex-wrap items-center space-x-4 w-full">
           <Card className="min-w-xs hover:bg-slate-50 hover:cursor-pointer">
@@ -183,11 +183,15 @@ export default function Kanban() {
         <div className="w-1/4 min-h-[50vh] max-h-[50vh] shadow-md rounded-md overflow-y-scroll relative">
           <h2 className="font-semibold text-xl sticky p-5 top-0 backdrop-blur-lg z-10 flex items-center justify-between space-x-3 dark:bg-black/80">
             <span>On Process</span>
-            <LoaderCircle className="animate-spin" />
+            <HourglassIcon />
           </h2>
           <div className="p-5 space-y-3">
             {dataTracking
-              .filter((item) => item.tipekanban === "INTERNAL")
+              .filter(
+                (item) =>
+                  item.tipekanban === "INTERNAL" &&
+                  item.status === "PO Diajukan"
+              )
               .map((item) => (
                 <div
                   key={item.kodepart}
@@ -220,39 +224,30 @@ export default function Kanban() {
             <CheckIcon />
           </h2>
           <div className="p-5 space-y-3">
-            {kanbanNotStarted.map((item) => (
-              <div
-                key={item.kodepart}
-                className="w-full h-56 border p-5 rounded-lg flex flex-col justify-between bg-green-50 dark:text-secondary relative overflow-hidden"
-              >
-                <ShineBorder
-                  shineColor={["#16a34a", "#22c55e", "#4ade80"]}
-                  className="absolute inset-0"
-                />
-                <div>
-                  <h1 className="font-bold">{item.part}</h1>
-                  <span className="">{item.kodepart}</span>
-                </div>
-                <div className="flex justify-between items-end">
+            {dataTracking
+              .filter((item) => item.status === "Sudah Diterima")
+              .map((item) => (
+                <div
+                  key={item.kodepart}
+                  className="w-full h-56 border p-5 rounded-lg flex flex-col justify-between bg-green-50 dark:text-secondary relative overflow-hidden"
+                >
+                  <ShineBorder
+                    shineColor={["#16a34a", "#22c55e", "#4ade80"]}
+                    className="absolute inset-0"
+                  />
                   <div>
-                    <p className="text-md">
-                      Qty yang harus dipesan: {item.qtyyangdipesan}
-                    </p>
-                    <p className="text-md">
-                      Deadline:{" "}
-                      {new Date(item.deadlinepemesanan).toLocaleDateString(
-                        "id-ID",
-                        {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        }
-                      )}
-                    </p>
+                    <h1 className="font-bold">{item.part}</h1>
+                    <span className="">{item.kodepart}</span>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-md">
+                        Qty yang harus dipesan: {item.qtyorder}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </div>
