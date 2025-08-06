@@ -12,11 +12,9 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -379,11 +377,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      {/* Footer */}
-      <SidebarFooter className="border-t">
-        <NavUser user={data.user} />
-      </SidebarFooter>
     </Sidebar>
   );
 }

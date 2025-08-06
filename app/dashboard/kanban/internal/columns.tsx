@@ -1,20 +1,41 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { KanbanDataTracking } from "./page";
+
+function formatDate(dateString: string): string {
+  if (!dateString) return '';
+  
+  let date: Date;
+  
+  if (dateString.includes('/')) {
+    const [d, m, y] = dateString.split('/');
+    date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+  }
+  else if (dateString.includes('-')) {
+    date = new Date(dateString);
+  }
+  else {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const parts = dateString.split(' ');
+    if (parts.length === 3 && months.includes(parts[1])) {
+      return dateString;
+    }
+    date = new Date(dateString);
+  }
+  
+  if (isNaN(date.getTime())) return dateString;
+  
+  const day = date.getDate().toString().padStart(2, '0');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  
+  return `${day} ${month} ${year}`;
+}
 
 export const columns: ColumnDef<KanbanDataTracking>[] = [
   {
@@ -22,6 +43,7 @@ export const columns: ColumnDef<KanbanDataTracking>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Tanggal" />
     ),
+    cell: ({ getValue }) => formatDate(getValue() as string),
   },
   {
     accessorKey: "PO",
@@ -82,12 +104,14 @@ export const columns: ColumnDef<KanbanDataTracking>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Tanggal PR" />
     ),
+    cell: ({ getValue }) => formatDate(getValue() as string),
   },
   {
     accessorKey: "tanggalpo",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tanggal PR" />
+      <DataTableColumnHeader column={column} title="Tanggal PO" />
     ),
+    cell: ({ getValue }) => formatDate(getValue() as string),
   },
   {
     accessorKey: "leadtime(hari)",
@@ -100,12 +124,14 @@ export const columns: ColumnDef<KanbanDataTracking>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="ETA" />
     ),
+    cell: ({ getValue }) => formatDate(getValue() as string),
   },
   {
     accessorKey: "tanggalreceipt",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Tanggal Receipt" />
     ),
+    cell: ({ getValue }) => formatDate(getValue() as string),
   },
   {
     accessorKey: "noreceipt",
