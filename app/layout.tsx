@@ -26,35 +26,15 @@ export const metadata: Metadata = {
       url: "https://www.linkedin.com/in/danang-hapis-fadillah-682878202/",
     },
   ],
-  creator: "Your Name",
-  metadataBase: new URL("https://yourapp.com"),
+  creator: "Danang Hapis Fadillah",
+  metadataBase: new URL("https://hapeace.vercel.app"),
   openGraph: {
     type: "website",
     locale: "id_ID",
-    url: "https://yourapp.com",
-    title: "Your App Name",
+    url: "https://hapeace.vercel.app",
+    title: "Engineering Project at Bintang Toedjoe",
     description: "Aplikasi manajemen yang powerful dan mudah digunakan",
-    siteName: "Your App Name",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Your App Name",
-    description: "Aplikasi manajemen yang powerful dan mudah digunakan",
-    creator: "@yourusername",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  verification: {
-    google: "your-google-verification-code",
+    siteName: "Eject",
   },
 };
 

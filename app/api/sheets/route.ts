@@ -87,6 +87,22 @@ function applyFilters(
   return filteredData;
 }
 
+// Helper function to verify worksheet exists
+async function verifyWorksheet(sheets: any, spreadsheetId: string, worksheetName: string) {
+  try {
+    const metadata = await sheets.spreadsheets.get({
+      spreadsheetId,
+      fields: 'sheets.properties.title'
+    });
+    
+    const worksheetTitles = metadata.data.sheets?.map((sheet: any) => sheet.properties.title) || [];
+    return worksheetTitles.includes(worksheetName);
+  } catch (error) {
+    console.error("Error verifying worksheet:", error);
+    return false;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -96,6 +112,18 @@ export async function GET(request: NextRequest) {
     const range = searchParams.get("range") || "A:Z";
 
     const sheets = createSheetsClient();
+
+    // Verify worksheet exists before making the request
+    const worksheetExists = await verifyWorksheet(sheets, process.env.sheet_id!, worksheetName);
+    if (!worksheetExists) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Worksheet '${worksheetName}' tidak ditemukan. Periksa nama worksheet di Google Sheet.` 
+        },
+        { status: 404 }
+      );
+    }
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.sheet_id!,
@@ -120,10 +148,23 @@ export async function GET(request: NextRequest) {
           machine: machineFilter,
           status: statusFilter,
         },
+        worksheet: worksheetName
       },
     });
   } catch (error) {
     console.error("Error fetching sheet data:", error);
+    
+    // Better error handling with specific messages
+    if (error instanceof Error && error.message.includes("Unable to parse range")) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "Nama worksheet tidak valid atau tidak ditemukan. Periksa nama worksheet di Google Sheet." 
+        },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, error: "Gagal mengambil data dari spreadsheet" },
       { status: 500 }
@@ -137,7 +178,7 @@ export async function PATCH(request: NextRequest) {
     const worksheetName = searchParams.get("worksheet") || "Sheet1";
     const kodepart = searchParams.get("kodepart");
 
-    console.log("kodepart:", kodepart); // Debug log
+    console.log("kodepart:", kodepart);
 
     // Validasi kodepart
     if (!kodepart || kodepart.trim() === "") {
@@ -149,7 +190,18 @@ export async function PATCH(request: NextRequest) {
 
     const sheets = createSheetsClient();
 
-    // Ambil semua data untuk mencari baris dengan kodepart yang sesuai
+    // Verify worksheet exists
+    const worksheetExists = await verifyWorksheet(sheets, process.env.sheet_id!, worksheetName);
+    if (!worksheetExists) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Worksheet '${worksheetName}' tidak ditemukan` 
+        },
+        { status: 404 }
+      );
+    }
+
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.sheet_id!,
       range: `${worksheetName}!A:Z`,
@@ -192,10 +244,6 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Kolom K, L, M (index 10, 11, 12)
-    const columnIndexes = [10, 11, 12]; // K, L, M
-    const columnNames = ["Untuk Bulan", "Status", "Deadline Pemesanan"];
-
     // Siapkan batch update untuk kolom K, L, M
     const batchUpdateRequests = [];
 
@@ -233,9 +281,9 @@ export async function PATCH(request: NextRequest) {
       message: `${kodepart} berhasil di update`,
     });
   } catch (error) {
-    console.error("Error clearing columns:", error);
+    console.error("Error updating columns:", error);
     return NextResponse.json(
-      { success: false, error: "Gagal mengosongkan kolom" },
+      { success: false, error: "Gagal mengupdate kolom" },
       { status: 500 }
     );
   }
