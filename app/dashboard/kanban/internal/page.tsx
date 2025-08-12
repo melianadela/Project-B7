@@ -73,6 +73,8 @@ export default function Kanban() {
 
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState<Date | undefined>(undefined)
+  const [currentPo, setCurrentPo] = useState('');
+  const [currentDate, setCurrentDate] = useState<Date | undefined>(undefined);
 
   const [loading, setLoading] = useState(true);
   const handleKanbanInternal = useCallback(async () => {
@@ -103,11 +105,13 @@ export default function Kanban() {
   }, [handleKanbanInternal]);
 
   const processPO = async (item: KanbanDataTracking) => {
-    const response = await fetch(`/api/sheets/sheets?worksheet=KANBAN_TRACKING?kodepart=${item.kodepart}&po=${item.po}&tanggalpo=${item.tanggalpo}&status=PO Process`, {
+    const response = await fetch(`/api/sheets/sheets?worksheet=KANBAN_TRACKING?kodepart=${item.kodepart}&po=${currentPo}&tanggalpo=${currentDate?.toISOString().split('T')[0]}&status=PO Process`, {
       method: "PATCH",
     })
     response.json().then((data) => {
       handleKanbanInternal();
+      setCurrentPo('');
+      setCurrentDate(undefined);
     })
   }
 
@@ -234,20 +238,17 @@ export default function Kanban() {
                       </PopoverTrigger>
                       <PopoverContent>
                           <h3 className="text-md mb-2 font-semibold">{item.tanggalpo ? "PO Process" :  "PR Process"}</h3>
-                          <Input type="text" id="po" name="po" className="mb-5" placeholder="Nomor PO" />
+                          <Input type="text" id="po" name="po" className="mb-5" placeholder="Nomor PO" value={currentPo} onChange={(e) => setCurrentPo(e.target.value)} />
                           <span className="text-sm mt-10 text-foreground ml-1">Tanggal PO</span>
                           <Calendar
                               mode="single"
-                              selected={date}
+                              selected={currentDate}
                               captionLayout="dropdown"
                               onSelect={(date) => {
-                                setDate(date)
-                                setOpen(false)
+                                setCurrentDate(date)
                               }}
-
                             />
-
-                            <Button className="mt-7" onClick={processPO}>
+                            <Button className="mt-7" onClick={() => processPO(item)}>
                               Save
                             </Button>
                       </PopoverContent>
