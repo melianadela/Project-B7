@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { google } from "googleapis";
-import { ta } from "zod/v4/locales";
 
 function createSheetsClient() {
   const credentials = {
@@ -45,7 +44,7 @@ export async function POST(request: NextRequest) {
     const eta = "";
     const tanggalreceipt = "";
     const noreceipt = "";
-    const status = "PO Diajukan";
+    const status = "PR Process";
     const keterangan = "";
     const pic = "";
 

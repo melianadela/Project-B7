@@ -12,8 +12,12 @@ import {
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
 import { Button } from "@/components/ui/button";
-import { CheckIcon, HourglassIcon, LoaderCircle, X } from "lucide-react";
+import { CheckIcon, HourglassIcon, Pencil, X } from "lucide-react";
 import { ShineBorder } from "@/components/magicui/shine-border";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { METHODS } from "http";
 
 export interface KanbanData {
   category: string;
@@ -67,6 +71,9 @@ export default function Kanban() {
   const [dataTracking, setDataTracking] = useState<KanbanDataTracking[]>([]);
   const kanbanNotStarted = data.filter((item) => item.deadlinepemesanan !== "");
 
+  const [open, setOpen] = useState(false)
+  const [date, setDate] = useState<Date | undefined>(undefined)
+
   const [loading, setLoading] = useState(true);
   const handleKanbanInternal = useCallback(async () => {
     try {
@@ -95,7 +102,14 @@ export default function Kanban() {
     handleKanbanInternal();
   }, [handleKanbanInternal]);
 
-  console.log(dataTracking);
+  const processPO = async (item: KanbanDataTracking) => {
+    const response = await fetch(`/api/sheets/sheets?worksheet=KANBAN_TRACKING?kodepart=${item.kodepart}&po=${item.po}&tanggalpo=${item.tanggalpo}&status=PO Process`, {
+      method: "PATCH",
+    })
+    response.json().then((data) => {
+      handleKanbanInternal();
+    })
+  }
 
   return (
     <>
@@ -190,7 +204,7 @@ export default function Kanban() {
               .filter(
                 (item) =>
                   item.tipekanban === "INTERNAL" &&
-                  item.status === "PO Diajukan"
+                  item.status.includes("Process")
               )
               .map((item) => (
                 <div
@@ -210,8 +224,34 @@ export default function Kanban() {
                       <p className="text-md">
                         Qty yang harus dipesan: {item.qtyorder}
                       </p>
-                      <p className="text-md">{item.status} </p>
+                      <p className="text-md underline">{item.status}</p>
                     </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button className="hover:cursor-pointer scale-90">
+                          <Pencil />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent>
+                          <h3 className="text-md mb-2 font-semibold">{item.tanggalpo ? "PO Process" :  "PR Process"}</h3>
+                          <Input type="text" id="po" name="po" className="mb-5" placeholder="Nomor PO" />
+                          <span className="text-sm mt-10 text-foreground ml-1">Tanggal PO</span>
+                          <Calendar
+                              mode="single"
+                              selected={date}
+                              captionLayout="dropdown"
+                              onSelect={(date) => {
+                                setDate(date)
+                                setOpen(false)
+                              }}
+
+                            />
+
+                            <Button className="mt-7" onClick={processPO}>
+                              Save
+                            </Button>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               ))}

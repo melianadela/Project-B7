@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { BorderBeam } from "./magicui/border-beam";
+import { Printer } from "lucide-react";
 
 interface Sparepart {
   mesin: string;
@@ -413,11 +414,21 @@ export function SparepartTable({ data }: SparepartTableProps) {
 
   return (
     <Card className="flex flex-col">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Daftar Sparepart</CardTitle>
-        <CardDescription>
-          Daftar seluruh sparepart pada mesin ini
-        </CardDescription>
+      <CardHeader className="items-center pb-0 flex justify-between">
+        <div className="space-y-1">
+          <CardTitle>Daftar Sparepart</CardTitle>
+          <CardDescription>
+            Daftar seluruh sparepart pada mesin ini
+          </CardDescription>
+        </div>
+        <div className="">
+          <Button 
+            variant="outline" 
+            className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-800 hover:text-red-100" 
+            onClick={() => window.print()}>
+            <Printer />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <div className="flex items-center py-4 gap-2">
@@ -471,7 +482,6 @@ export function SparepartTable({ data }: SparepartTableProps) {
             <TableRow>
               <TableHead>Code</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Quantity</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Lifetime</TableHead>
               <TableHead>Last Replace</TableHead>
@@ -485,7 +495,6 @@ export function SparepartTable({ data }: SparepartTableProps) {
               <TableRow key={index}>
                 <TableCell>{sparepart.kodepart}</TableCell>
                 <TableCell>{sparepart.part}</TableCell>
-                <TableCell>{sparepart.qty}</TableCell>
                 <TableCell>
                   <CategoryLabel category={sparepart.category} />
                 </TableCell>
