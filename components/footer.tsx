@@ -33,16 +33,23 @@ export default function Footer() {
           >
             Danang
           </Link>
-          , and
+          ,
           <Link
             className="underline hover:text-black transition-colors font-medium"
             href="https://www.instagram.com/melianadsh?igsh=MWpranhrdGM5M3d0Mg%3D%3D&utm_source=qr"
           >
             Eli
           </Link>
+          , and
+          <Link
+            className="underline hover:text-black transition-colors font-medium"
+            href="https://www.instagram.com/nadyaa.ka?igsh=MWRoMmR0Znh3eHRtNQ=="
+          >
+            Nadya
+          </Link>
         </span>
 
-        <span className="opacity-70">at BTS Squad Batch 3</span>
+        <span className="opacity-70">at BTS Batch 3 & 4</span>
       </div>
     </footer>
   );
