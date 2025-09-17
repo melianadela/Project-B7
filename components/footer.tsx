@@ -26,12 +26,19 @@ export default function Footer() {
           >
             Armelia
           </Link>
-          , and
+          ,
           <Link
             className="underline hover:text-black transition-colors font-medium"
             href="https://www.linkedin.com/in/danang-hapis-fadillah-682878202/"
           >
             Danang
+          </Link>
+          , and
+          <Link
+            className="underline hover:text-black transition-colors font-medium"
+            href="https://www.instagram.com/melianadsh?igsh=MWpranhrdGM5M3d0Mg%3D%3D&utm_source=qr"
+          >
+            Eli
           </Link>
         </span>
 
