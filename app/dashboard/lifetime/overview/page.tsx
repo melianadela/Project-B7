@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  MachineStatsCards,
   PieChartDistribution,
   OverdueTable,
   SparepartTable,
@@ -27,37 +26,33 @@ interface Distribution {
   value: number;
 }
 
-// semua worksheet yang mau digabung (samain dengan yg ada di Sidebar)
-const WORKSHEETS = [
-  "ILAPAK",
-  "SIG",
-  "UNIFILL",
-  "CHIMEI",
-  "JINSUNG",
-  "JIHCHENG",
-  "COSMEC",
-  "FBD",
-];
-
 export default function LifetimeOverviewPage() {
+  // ✅ panggil hook satu-satu
+  const ilapak = useSheetData({ worksheet: "ILAPAK", machine: "ILAPAK" });
+  const sig = useSheetData({ worksheet: "SIG", machine: "SIG" });
+  const unifill = useSheetData({ worksheet: "UNIFILL", machine: "UNIFILL" });
+  const chimei = useSheetData({ worksheet: "CHIMEI", machine: "CHIMEI" });
+  const jinsung = useSheetData({ worksheet: "JINSUNG", machine: "JINSUNG" });
+  const jihcheng = useSheetData({ worksheet: "JIHCHENG", machine: "JIHCHENG" });
+  const cosmec = useSheetData({ worksheet: "COSMEC", machine: "COSMEC" });
+  const fbd = useSheetData({ worksheet: "FBD", machine: "FBD" });
+
   const [allSpareparts, setAllSpareparts] = useState<Sparepart[]>([]);
   const [distribution, setDistribution] = useState<Distribution[]>([]);
   const [overdueSpareparts, setOverdueSpareparts] = useState<Sparepart[]>([]);
 
-  // Ambil data semua worksheet
-  const sheetsData = WORKSHEETS.map((ws) =>
-    useSheetData({ worksheet: ws, machine: "" })
-  );
-
   useEffect(() => {
-    // gabungkan semua data sheet
-    const combined: Sparepart[] = sheetsData
-      .map((sd) => sd.data || [])
-      .flat()
-      .map((d: Sparepart, i) => ({
-        ...d,
-        mesin: d.mesin || WORKSHEETS[i] || "-", // jaga-jaga kalau mesin kosong
-      }));
+    // gabung semua data, tambahin nama mesin biar tampil
+    const combined: Sparepart[] = [
+      ...(ilapak.data || []).map((d: any) => ({ ...d, mesin: "ILAPAK" })),
+      ...(sig.data || []).map((d: any) => ({ ...d, mesin: "SIG" })),
+      ...(unifill.data || []).map((d: any) => ({ ...d, mesin: "UNIFILL" })),
+      ...(chimei.data || []).map((d: any) => ({ ...d, mesin: "CHIMEI" })),
+      ...(jinsung.data || []).map((d: any) => ({ ...d, mesin: "JINSUNG" })),
+      ...(jihcheng.data || []).map((d: any) => ({ ...d, mesin: "JIHCHENG" })),
+      ...(cosmec.data || []).map((d: any) => ({ ...d, mesin: "COSMEC" })),
+      ...(fbd.data || []).map((d: any) => ({ ...d, mesin: "FBD" })),
+    ];
 
     if (combined.length > 0) {
       setAllSpareparts(combined);
@@ -82,7 +77,16 @@ export default function LifetimeOverviewPage() {
         { name: "Sparepart OK", value: ok.length },
       ]);
     }
-  }, [sheetsData.map((sd) => sd.data).join("-")]);
+  }, [
+    ilapak.data,
+    sig.data,
+    unifill.data,
+    chimei.data,
+    jinsung.data,
+    jihcheng.data,
+    cosmec.data,
+    fbd.data,
+  ]);
 
   return (
     <div className="mb-8">
@@ -92,7 +96,7 @@ export default function LifetimeOverviewPage() {
       <p className="mt-2 text-lg text-gray-400">
         Ringkasan kondisi sparepart untuk seluruh mesin
       </p>
-      <div className="mt-4 h-1 w-300 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+      <div className="mt-4 h-1 w-350 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
 
       <div className="mt-10">
         <h3 className="mb-5 text-2xl font-semibold">
@@ -100,7 +104,6 @@ export default function LifetimeOverviewPage() {
         </h3>
         <div className="grid grid-cols-2 gap-10">
           <PieChartDistribution data={distribution} />
-          {/* ✅ kasih showMachine */}
           <OverdueTable data={overdueSpareparts} showMachine />
         </div>
       </div>
@@ -109,7 +112,6 @@ export default function LifetimeOverviewPage() {
         <h3 className="mb-5 text-2xl font-semibold">
           Sparepart Lifetime Table (All Machines)
         </h3>
-        {/* ✅ kasih showMachine */}
         <SparepartTable data={allSpareparts} showMachine />
       </div>
     </div>
