@@ -26,32 +26,31 @@ interface Distribution {
   value: number;
 }
 
+const WORKSHEETS = [
+  "ILAPAK",
+  "SIG",
+  "UNIFILL",
+  "CHIMEI",
+  "JINSUNG",
+  "JIHCHENG",
+  "COSMEC",
+  "FBD",
+];
+
 export default function LifetimeOverviewPage() {
-  // ✅ Panggil hook satu per satu, bukan dalam map()
-  const ilapak = useSheetData({ worksheet: "ILAPAK", machine: "" });
-  const sig = useSheetData({ worksheet: "SIG", machine: "" });
-  const unifill = useSheetData({ worksheet: "UNIFILL", machine: "" });
-  const chimei = useSheetData({ worksheet: "CHIMEI", machine: "" });
-  const jinsung = useSheetData({ worksheet: "JINSUNG", machine: "" });
-  const jihcheng = useSheetData({ worksheet: "JIHCHENG", machine: "" });
-  const cosmec = useSheetData({ worksheet: "COSMEC", machine: "" });
-  const fbd = useSheetData({ worksheet: "FBD", machine: "" });
+  // ✅ panggil hook satu per satu di luar loop
+  const sheetDataArray = WORKSHEETS.map((ws) =>
+    useSheetData({ worksheet: ws, machine: "" })
+  );
 
   const [allSpareparts, setAllSpareparts] = useState<Sparepart[]>([]);
   const [distribution, setDistribution] = useState<Distribution[]>([]);
   const [overdueSpareparts, setOverdueSpareparts] = useState<Sparepart[]>([]);
 
   useEffect(() => {
-    const combined: Sparepart[] = [
-      ...(ilapak.data || []),
-      ...(sig.data || []),
-      ...(unifill.data || []),
-      ...(chimei.data || []),
-      ...(jinsung.data || []),
-      ...(jihcheng.data || []),
-      ...(cosmec.data || []),
-      ...(fbd.data || []),
-    ];
+    const combined: Sparepart[] = sheetDataArray
+      .map((sd) => sd.data || [])
+      .flat() as Sparepart[];
 
     if (combined.length > 0) {
       setAllSpareparts(combined);
@@ -76,16 +75,7 @@ export default function LifetimeOverviewPage() {
         { name: "Sparepart OK", value: ok.length },
       ]);
     }
-  }, [
-    ilapak.data,
-    sig.data,
-    unifill.data,
-    chimei.data,
-    jinsung.data,
-    jihcheng.data,
-    cosmec.data,
-    fbd.data,
-  ]); // ✅ dependencies jelas
+  }, [sheetDataArray.map((sd) => sd.data).join("|")]);
 
   return (
     <div className="mb-8">
@@ -104,7 +94,7 @@ export default function LifetimeOverviewPage() {
         </h3>
         <div className="grid grid-cols-2 gap-10">
           <PieChartDistribution data={distribution} />
-          <OverdueTable data={overdueSpareparts} />
+          <OverdueTable data={overdueSpareparts} showMachine />
         </div>
       </div>
 
@@ -113,7 +103,7 @@ export default function LifetimeOverviewPage() {
         <h3 className="mb-5 text-2xl font-semibold">
           Sparepart Lifetime Table (All Machines)
         </h3>
-        <SparepartTable data={allSpareparts} />
+        <SparepartTable data={allSpareparts} showMachine />
       </div>
     </div>
   );
