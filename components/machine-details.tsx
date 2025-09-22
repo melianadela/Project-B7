@@ -297,7 +297,7 @@ export function OverdueTable({ data, showMachine = false }: OverdueTableProps) {
 }
 
 export function PieChartDistribution({ data }: PieChartDistributionProps) {
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+  const COLORS = ["#f5ff34ff", "#e42b2bff", "#11f611ff", "#FF8042"];
   const chartConfig = {
     sparepart: { label: "Sparepart", color: "#CCCCCC" },
     "Sparepart yang akan habis umur": { label: "Sparepart yang akan habis umur", color: COLORS[0] },

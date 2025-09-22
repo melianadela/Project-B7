@@ -7,9 +7,9 @@ import {
   Target,
   BrainCircuit,
   KanbanSquare,
-  Cog,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import {
@@ -31,11 +31,6 @@ import {
 } from "./ui/collapsible";
 
 const data = {
-  user: {
-    name: "User One",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navLifetime: {
     title: "Lifetime",
     icon: Activity,
@@ -154,25 +149,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar variant="inset" {...props}>
       {/* Header */}
-      <SidebarHeader className="border-b">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="#" className="flex items-center gap-3 px-3 py-2">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Cog className="size-5" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-semibold text-sm">E-Ject</span>
-                  <span className="text-xs text-muted-foreground">
-                    Engineering Projects
-                  </span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+      <SidebarHeader className="border-b h-32 flex items-center px-6">
+  <SidebarMenu>
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild className="h-full w-full">
+        <Link href="#" className="flex items-center gap-5 h-full">
+          {/* Logo */}
+          <Image
+            src="/companylogo.png"
+            alt="Company Logo"
+            width={150}
+            height={150}
+            className="object-contain"
+          />
+
+          {/* Teks */}
+          <div className="flex flex-col justify-center leading-tight">
+            {/* Judul */}
+            <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent tracking-wide">
+              E-Ject
+            </span>
+            {/* Subjudul */}
+            <span className="text-sm font-medium text-muted-foreground not-italic tracking-tight">
+              Engineering Projects
+            </span>
+          </div>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  </SidebarMenu>
+</SidebarHeader>
+
+
 
       {/* Content */}
       <SidebarContent className="px-2 -space-y-5">
@@ -187,9 +195,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 >
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton className="w-full justify-between hover:bg-muted">
-                      <div className="flex items-center gap-3">
-                        <data.navLifetime.icon className="size-4" />
-                        <span className="font-medium">
+                      <div className="flex items-center gap-4">
+                        <data.navLifetime.icon className="w-8 h-8" />
+                        <span className="text-2xl font-bold">
                           {data.navLifetime.title}
                         </span>
                       </div>
@@ -332,6 +340,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
 
         {/* Kanban Section */}
+        <div className="mb-2"></div>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
@@ -343,9 +352,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   >
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton className="w-full justify-between hover:bg-muted">
-                        <div className="flex items-center gap-3">
-                          <nav.icon className="size-4" />
-                          <span className="font-medium">{nav.title}</span>
+                        <div className="flex items-center gap-4">
+                          <nav.icon className="w-8 h-8" />
+                          <span className="text-2xl font-bold">
+                            {nav.title}
+                          </span>
                         </div>
                         <ChevronRight
                           className={`size-4 transition-transform duration-200 ${

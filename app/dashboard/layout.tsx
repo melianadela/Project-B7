@@ -16,8 +16,8 @@ export default function DashboardLayout({
     <SidebarProvider
       style={
         {
-          "--sidebar-width": "20rem",
-          "--sidebar-width-mobile": "20rem",
+          "--sidebar-width": "24rem",
+          "--sidebar-width-mobile": "18rem",
         } as React.CSSProperties
       }
     >
