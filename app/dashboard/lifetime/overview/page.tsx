@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   MachineStatsCards,
   PieChartDistribution,
@@ -7,7 +8,6 @@ import {
   SparepartTable,
 } from "@/components/machine-details";
 import { useSheetData } from "@/hooks/use-sheet-data";
-import { useEffect, useState } from "react";
 
 interface Sparepart {
   mesin: string;
@@ -27,7 +27,6 @@ interface Distribution {
   value: number;
 }
 
-// semua worksheet yang mau digabung (samain dengan yg ada di Sidebar)
 const WORKSHEETS = [
   "ILAPAK",
   "SIG",
@@ -40,24 +39,19 @@ const WORKSHEETS = [
 ];
 
 export default function LifetimeOverviewPage() {
+  // ✅ panggil hook satu per satu di luar loop
+  const sheetDataArray = WORKSHEETS.map((ws) =>
+    useSheetData({ worksheet: ws, machine: "" })
+  );
+
   const [allSpareparts, setAllSpareparts] = useState<Sparepart[]>([]);
   const [distribution, setDistribution] = useState<Distribution[]>([]);
   const [overdueSpareparts, setOverdueSpareparts] = useState<Sparepart[]>([]);
 
-  // Ambil data semua worksheet
-  const sheetsData = WORKSHEETS.map((ws) =>
-    useSheetData({ worksheet: ws, machine: "" })
-  );
-
   useEffect(() => {
-    // gabungkan semua data sheet
-    const combined: Sparepart[] = sheetsData
+    const combined: Sparepart[] = sheetDataArray
       .map((sd) => sd.data || [])
-      .flat()
-      .map((d: Sparepart, i) => ({
-        ...d,
-        mesin: d.mesin || WORKSHEETS[i] || "-", // jaga-jaga kalau mesin kosong
-      }));
+      .flat() as Sparepart[];
 
     if (combined.length > 0) {
       setAllSpareparts(combined);
@@ -82,7 +76,7 @@ export default function LifetimeOverviewPage() {
         { name: "Sparepart OK", value: ok.length },
       ]);
     }
-  }, [sheetsData.map((sd) => sd.data).join("-")]);
+  }, [sheetDataArray.map((sd) => sd.data).join("|")]); // aman, biar ke-trigger kalau ada perubahan
 
   return (
     <div className="mb-8">
@@ -94,23 +88,23 @@ export default function LifetimeOverviewPage() {
       </p>
       <div className="mt-4 h-1 w-350 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
 
+      {/* Distribution & Overdue */}
       <div className="mt-10">
         <h3 className="mb-5 text-2xl font-semibold">
           Distribution & Overdue Spareparts (All Machines)
         </h3>
         <div className="grid grid-cols-2 gap-10">
           <PieChartDistribution data={distribution} />
-          {/* ✅ kasih showMachine */}
-          <OverdueTable data={overdueSpareparts} showMachine />
+          <OverdueTable data={overdueSpareparts} />
         </div>
       </div>
 
+      {/* Sparepart Table */}
       <div className="mt-10 mb-20">
         <h3 className="mb-5 text-2xl font-semibold">
           Sparepart Lifetime Table (All Machines)
         </h3>
-        {/* ✅ kasih showMachine */}
-        <SparepartTable data={allSpareparts} showMachine />
+        <SparepartTable data={allSpareparts} />
       </div>
     </div>
   );
