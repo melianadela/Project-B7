@@ -39,7 +39,9 @@ const data = {
   navLifetime: {
     title: "Lifetime",
     icon: Activity,
-    links: [{ title: "Overview", icon: Target, url: "/dashboard/projects" }],
+    links: [
+      { title: "Overview", icon: Target, url: "/dashboard/lifetime/overview" },
+    ],
     categories: [
       {
         title: "Machines",
@@ -200,7 +202,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub className="ml-6">
-                      {/* Direct Links */}
+                      {/* Overview link */}
                       {data.navLifetime.links.map((link) => (
                         <SidebarMenuSubItem key={link.title}>
                           <Link href={link.url}>
