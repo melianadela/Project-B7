@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  MachineStatsCards,
   PieChartDistribution,
   OverdueTable,
   SparepartTable,
@@ -27,31 +26,32 @@ interface Distribution {
   value: number;
 }
 
-const WORKSHEETS = [
-  "ILAPAK",
-  "SIG",
-  "UNIFILL",
-  "CHIMEI",
-  "JINSUNG",
-  "JIHCHENG",
-  "COSMEC",
-  "FBD",
-];
-
 export default function LifetimeOverviewPage() {
-  // ✅ panggil hook satu per satu di luar loop
-  const sheetDataArray = WORKSHEETS.map((ws) =>
-    useSheetData({ worksheet: ws, machine: "" })
-  );
+  // ✅ Panggil hook satu per satu, bukan dalam map()
+  const ilapak = useSheetData({ worksheet: "ILAPAK", machine: "" });
+  const sig = useSheetData({ worksheet: "SIG", machine: "" });
+  const unifill = useSheetData({ worksheet: "UNIFILL", machine: "" });
+  const chimei = useSheetData({ worksheet: "CHIMEI", machine: "" });
+  const jinsung = useSheetData({ worksheet: "JINSUNG", machine: "" });
+  const jihcheng = useSheetData({ worksheet: "JIHCHENG", machine: "" });
+  const cosmec = useSheetData({ worksheet: "COSMEC", machine: "" });
+  const fbd = useSheetData({ worksheet: "FBD", machine: "" });
 
   const [allSpareparts, setAllSpareparts] = useState<Sparepart[]>([]);
   const [distribution, setDistribution] = useState<Distribution[]>([]);
   const [overdueSpareparts, setOverdueSpareparts] = useState<Sparepart[]>([]);
 
   useEffect(() => {
-    const combined: Sparepart[] = sheetDataArray
-      .map((sd) => sd.data || [])
-      .flat() as Sparepart[];
+    const combined: Sparepart[] = [
+      ...(ilapak.data || []),
+      ...(sig.data || []),
+      ...(unifill.data || []),
+      ...(chimei.data || []),
+      ...(jinsung.data || []),
+      ...(jihcheng.data || []),
+      ...(cosmec.data || []),
+      ...(fbd.data || []),
+    ];
 
     if (combined.length > 0) {
       setAllSpareparts(combined);
@@ -76,7 +76,16 @@ export default function LifetimeOverviewPage() {
         { name: "Sparepart OK", value: ok.length },
       ]);
     }
-  }, [sheetDataArray.map((sd) => sd.data).join("|")]); // aman, biar ke-trigger kalau ada perubahan
+  }, [
+    ilapak.data,
+    sig.data,
+    unifill.data,
+    chimei.data,
+    jinsung.data,
+    jihcheng.data,
+    cosmec.data,
+    fbd.data,
+  ]); // ✅ dependencies jelas
 
   return (
     <div className="mb-8">
