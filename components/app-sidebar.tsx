@@ -7,6 +7,8 @@ import {
   Target,
   BrainCircuit,
   KanbanSquare,
+  Users,
+  Wrench,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -150,37 +152,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar variant="inset" {...props}>
       {/* Header */}
       <SidebarHeader className="border-b h-32 flex items-center px-6">
-  <SidebarMenu>
-    <SidebarMenuItem>
-      <SidebarMenuButton asChild className="h-full w-full">
-        <Link href="#" className="flex items-center gap-5 h-full">
-          {/* Logo */}
-          <Image
-            src="/companylogo.png"
-            alt="Company Logo"
-            width={150}
-            height={150}
-            className="object-contain"
-          />
-
-          {/* Teks */}
-          <div className="flex flex-col justify-center leading-tight">
-            {/* Judul */}
-            <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent tracking-wide">
-              E-Ject
-            </span>
-            {/* Subjudul */}
-            <span className="text-sm font-medium text-muted-foreground not-italic tracking-tight">
-              Engineering Projects
-            </span>
-          </div>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  </SidebarMenu>
-</SidebarHeader>
-
-
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="h-full w-full">
+              <Link href="#" className="flex items-center gap-5 h-full">
+                <Image
+                  src="/companylogo.png"
+                  alt="Company Logo"
+                  width={150}
+                  height={150}
+                  className="object-contain"
+                />
+                <div className="flex flex-col justify-center leading-tight">
+                  <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent tracking-wide">
+                    E-Ject
+                  </span>
+                  <span className="text-sm font-medium text-muted-foreground not-italic tracking-tight">
+                    Engineering Projects
+                  </span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
       {/* Content */}
       <SidebarContent className="px-2 -space-y-5">
@@ -217,12 +212,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             <SidebarMenuButton
                               size="sm"
                               className={`w-full justify-start hover:bg-muted ${
-                                isActiveLink(link.url) ? "bg-slate-200" : ""
+                                isActiveLink(link.url) ? "bg-slate-500" : ""
                               }`}
                             >
-                              <div className="flex items-center gap-3">
-                                <link.icon className="size-4" />
-                                <span className="text-sm">{link.title}</span>
+                              <div className="flex items-center gap-5">
+                                <link.icon className="w-7 h-7" />
+                                <span className="text-lg font-semibold">{link.title}</span>
                               </div>
                             </SidebarMenuButton>
                           </Link>
@@ -242,10 +237,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 className="w-full justify-between hover:bg-muted"
                               >
                                 <div className="flex items-center gap-3">
-                                  <category.icon className="size-4" />
-                                  <span className="text-sm font-medium">
-                                    {category.title}
-                                  </span>
+                                  <category.icon className="w-7 h-7" />
+                                  <span className="text-lg font-bold">{category.title}</span>
                                 </div>
                                 <ChevronRight
                                   className={`size-4 transition-transform duration-200 ${
@@ -376,7 +369,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                   isActiveLink(item.url) ? "bg-slate-200" : ""
                                 }`}
                               >
-                                <span className="text-sm">{item.title}</span>
+                                <span className="text-lg font-semibold">{item.title}</span>
                               </SidebarMenuButton>
                             </Link>
                           </SidebarMenuSubItem>
@@ -386,6 +379,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </Collapsible>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* CMMS Section */}
+        <div className="mb-2"></div>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="w-full justify-between hover:bg-muted">
+                  <div className="flex items-center gap-4">
+                    <Wrench className="w-8 h-8" />
+                    <span className="text-2xl font-bold">CMMS</span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
