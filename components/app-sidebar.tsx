@@ -238,7 +238,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                               >
                                 <div className="flex items-center gap-3">
                                   <category.icon className="w-7 h-7" />
-                                  <span className="text-lg font-bold">{category.title}</span>
+                                  <span className="text-lg font-semibold">{category.title}</span>
                                 </div>
                                 <ChevronRight
                                   className={`size-4 transition-transform duration-200 ${
