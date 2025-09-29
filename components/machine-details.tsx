@@ -1,5 +1,7 @@
+// components/machine-details.tsx
 "use client";
 
+import { Wrench, Clock, AlertTriangle, CheckCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Pie, PieChart, Cell } from "recharts";
 import {
@@ -17,7 +19,7 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
+  TableHead, // TableHead is the cell header element
   TableHeader,
   TableRow,
 } from "./ui/table";
@@ -39,6 +41,8 @@ import {
 } from "./ui/select";
 import { BorderBeam } from "./magicui/border-beam";
 import { Printer } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Sparepart {
   mesin: string;
@@ -56,6 +60,11 @@ interface Sparepart {
 interface MachineStatsCardsProps {
   worksheet: string;
   machine: string;
+  // callbacks menerima "show" callback agar komponen page bisa tetap mengontrol data
+  onTotalClick?: (showWith: (data: Sparepart[]) => void) => void;
+  onExpiringClick?: (showWith: (data: Sparepart[]) => void) => void;
+  onOverdueClick?: (showWith: (data: Sparepart[]) => void) => void;
+  onOkClick?: (showWith: (data: Sparepart[]) => void) => void;
 }
 
 interface PieChartData {
@@ -66,7 +75,7 @@ interface PieChartData {
 
 interface OverdueTableProps {
   data: Sparepart[];
-  showMachine?: boolean; // 👈 tambahin
+  showMachine?: boolean;
 }
 
 interface PieChartDistributionProps {
@@ -75,9 +84,10 @@ interface PieChartDistributionProps {
 
 interface SparepartTableProps {
   data: Sparepart[];
-  showMachine?: boolean; // 👈 tambahin
+  showMachine?: boolean;
 }
 
+/* --- Helper UI Labels --- */
 const StatusLabel = ({ status }: { status: string }) => {
   let color = "";
   switch (status) {
@@ -90,7 +100,7 @@ const StatusLabel = ({ status }: { status: string }) => {
     default:
       color = "bg-gray-50 text-black";
   }
-  return <span className={`px-5 py-1 rounded-full ${color}`}>{status}</span>;
+  return <span className={`px-3 py-1 rounded-full ${color}`}>{status || "-"}</span>;
 };
 
 const CategoryLabel = ({ category }: { category: string }) => {
@@ -123,19 +133,56 @@ const ResponsibilityLabel = ({ responsibility }: { responsibility: string }) => 
     default:
       color = "bg-gray-50 text-black";
   }
-  return (
-    <span className={`px-2 py-1 rounded-full ${color}`}>{responsibility}</span>
-  );
+  return <span className={`px-2 py-1 rounded-full ${color}`}>{responsibility}</span>;
 };
 
-export function MachineStatsCards({ worksheet, machine }: MachineStatsCardsProps) {
-  const [stats, setStats] = useState({
-    total: 0,
-    expiringSoon: 0,
-    overdue: 0,
-    ok: 0,
-  });
+/* --- Simple Modal (self-contained) --- */
+function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children?: React.ReactNode;
+}) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-6">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative max-w-5xl w-full bg-white dark:bg-slate-900 rounded shadow-lg overflow-auto max-h-[85vh]">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="text-lg font-medium">{title}</h3>
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            className="text-white bg-slate-800 shadow-md hover:bg-slate-700 hover:shadow-lg active:scale-95 transition transform rounded-md"
+          >
+            Close
+          </Button>
+        </div>
+        <div className="p-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* --- MachineStatsCards (now manages a modal inside) --- */
+export function MachineStatsCards({
+  worksheet,
+  machine,
+  onTotalClick,
+  onExpiringClick,
+  onOverdueClick,
+  onOkClick,
+}: MachineStatsCardsProps) {
+  const [stats, setStats] = useState({ total: 0, expiringSoon: 0, overdue: 0, ok: 0 });
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalData, setModalData] = useState<Sparepart[]>([]);
   const theme = useTheme();
 
   useEffect(() => {
@@ -145,27 +192,18 @@ export function MachineStatsCards({ worksheet, machine }: MachineStatsCardsProps
         const response = await fetch(`/api/sheets?worksheet=${worksheet}`);
         const result = await response.json();
         if (result.success) {
-          let data: Sparepart[] = result.data;
-          if (machine !== "ALL") {
-            data = data.filter((item: Sparepart) => item.mesin === machine);
+          let data = result.data as Sparepart[];
+          if (machine && machine !== "ALL") {
+            data = data.filter((item) => (item.mesin || "").toUpperCase() === (machine || "").toUpperCase());
           }
           const total = data.length;
-          const expiringSoon = data.filter(
-            (item) => item.status === "Segera Jadwalkan Penggantian"
-          ).length;
-          const overdue = data.filter(
-            (item) => item.status === "Melewati Jadwal Penggantian"
-          ).length;
-          const ok = data.filter(
-            (item) =>
-              item.status !== "Segera Jadwalkan Penggantian" &&
-              item.status !== "Melewati Jadwal Penggantian" &&
-              item.status !== ""
-          ).length;
+          const expiringSoon = data.filter((item) => item.status === "Segera Jadwalkan Penggantian").length;
+          const overdue = data.filter((item) => item.status === "Melewati Jadwal Penggantian").length;
+          const ok = data.filter((item) => item.status && item.status !== "Segera Jadwalkan Penggantian" && item.status !== "Melewati Jadwal Penggantian").length;
           setStats({ total, expiringSoon, overdue, ok });
         }
-      } catch (error) {
-        console.error("Failed to fetch data", error);
+      } catch (err) {
+        console.error("fetch failed", err);
       } finally {
         setLoading(false);
       }
@@ -173,85 +211,124 @@ export function MachineStatsCards({ worksheet, machine }: MachineStatsCardsProps
     fetchData();
   }, [worksheet, machine]);
 
+  // helper show modal with data; also call optional external callback if provided
+  const showModalWith = (title: string, d: Sparepart[], externalCb?: ((showWith: (data: Sparepart[]) => void) => void)) => {
+    setModalTitle(title);
+    setModalData(d);
+    setModalOpen(true);
+    if (externalCb) {
+      // allow parent to override data if needed
+      externalCb((override) => {
+        setModalData(override);
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                <Skeleton className="h-4 w-40" />
-              </CardTitle>
+            <CardHeader className="flex items-center justify-between pb-2">
+              <CardTitle><Skeleton className="h-4 w-40" /></CardTitle>
             </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
-            </CardContent>
+            <CardContent><Skeleton className="h-8 w-16" /></CardContent>
           </Card>
         ))}
       </div>
     );
   }
 
+  // card render: clickable area is button inside (tidak langsung pada Card untuk menghindari typing issues)
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <ShineBorder shineColor={theme.theme === "dark" ? "white" : "black"} />
-        <CardHeader>
-          <CardTitle className="text-xl font-medium">
-            Total Sparepart Terpantau
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.total} Item</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <ShineBorder shineColor={theme.theme === "dark" ? "white" : "black"} />
-        <CardHeader>
-          <CardTitle className="text-xl font-medium">
-            Sparepart akan habis umur (&lt; 14 hari)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.expiringSoon} Item</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <ShineBorder shineColor={theme.theme === "dark" ? "white" : "black"} />
-        <CardHeader>
-          <CardTitle className="text-xl font-medium">Sparepart Overdue</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.overdue} Item</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <ShineBorder shineColor={theme.theme === "dark" ? "white" : "black"} />
-        <CardHeader>
-          <CardTitle className="text-xl font-medium">Sparepart OK</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.ok} Item</div>
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Total */}
+        <Card
+          onClick={() => showModalWith("Semua Sparepart", [], onTotalClick)}
+          className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
+        >
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-bold">Total Sparepart Terpantau</h3>
+            <Wrench className="w-15 h-15 text-gray-500" />
+          </div>
+          <div className="mt-4 text-6xl font-bold">
+            {stats.total}
+            <span className="ml-2 text-xl font-normal text-gray-500">Item</span>
+          </div>
+        </Card>
+
+        {/* Expiring Soon */}
+        <Card
+          onClick={() => showModalWith("Sparepart Akan Habis Umur", [], onExpiringClick)}
+          className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
+        >
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-bold">Sparepart Akan Habis Umur</h3>
+            <Clock className="w-15 h-15 text-gray-500" />
+          </div>
+          <p className="text-sm md:text-base lg:text-lg text-gray-700">&lt; 14 hari</p>
+          <div className="mt-2 text-6xl font-bold">
+            {stats.expiringSoon}
+            <span className="ml-2 text-xl font-normal text-gray-500">Item</span>
+          </div>
+        </Card>
+
+        {/* Overdue */}
+        <Card
+          onClick={() => showModalWith("Sparepart Overdue", [], onOverdueClick)}
+          className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
+        >
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-bold">Sparepart Overdue</h3>
+            <AlertTriangle className="w-15 h-15 text-gray-500" />
+          </div>
+          <div className="mt-4 text-6xl font-bold">
+            {stats.overdue}
+            <span className="ml-2 text-xl font-normal text-gray-500">Item</span>
+          </div>
+        </Card>
+
+        {/* OK */}
+        <Card
+          onClick={() => showModalWith("Sparepart OK", [], onOkClick)}
+          className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
+        >
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-bold">Sparepart Aktif (OK)</h3>
+            <CheckCircle className="w-15 h-15 text-gray-500" />
+          </div>
+          <div className="mt-4 text-6xl font-bold">
+            {stats.ok}
+            <span className="ml-2 text-xl font-normal text-gray-500">Item</span>
+          </div>
+        </Card>
+      </div>
+
+      {/* modal */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={modalTitle}
+      >
+        <SparepartTable data={modalData} showMachine={true} />
+      </Modal>
+    </>
   );
 }
 
+/* --- OverdueTable --- */
 export function OverdueTable({ data, showMachine = false }: OverdueTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(data.length / itemsPerPage);
-
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentData = data.slice(startIndex, endIndex);
+  const currentData = data.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <Card>
       <BorderBeam duration={6} size={400} className="from-transparent via-slate-600 to-transparent" />
-      <BorderBeam duration={6} delay={3} size={400} borderWidth={2} className="from-transparent via-slate-600 to-transparent" />
-      <CardHeader className="items-center pb-0">
+      <CardHeader>
         <CardTitle>Sparepart Overdue</CardTitle>
         <CardDescription>Daftar sparepart yang melewati jadwal penggantian</CardDescription>
       </CardHeader>
@@ -268,8 +345,8 @@ export function OverdueTable({ data, showMachine = false }: OverdueTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {currentData.map((sp, index) => (
-              <TableRow key={index}>
+            {currentData.map((sp, i) => (
+              <TableRow key={i}>
                 {showMachine && <TableCell>{sp.mesin}</TableCell>}
                 <TableCell>{sp.kodepart}</TableCell>
                 <TableCell>{sp.part}</TableCell>
@@ -280,6 +357,7 @@ export function OverdueTable({ data, showMachine = false }: OverdueTableProps) {
             ))}
           </TableBody>
         </Table>
+
         {totalPages > 1 && (
           <div className="flex justify-center items-center space-x-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>
@@ -296,6 +374,7 @@ export function OverdueTable({ data, showMachine = false }: OverdueTableProps) {
   );
 }
 
+/* --- PieChartDistribution --- */
 export function PieChartDistribution({ data }: PieChartDistributionProps) {
   const COLORS = ["#f5ff34ff", "#e42b2bff", "#11f611ff", "#FF8042"];
   const chartConfig = {
@@ -303,39 +382,53 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
     "Sparepart yang akan habis umur": { label: "Sparepart yang akan habis umur", color: COLORS[0] },
     "Sparepart overdue": { label: "Sparepart overdue", color: COLORS[1] },
     "Sparepart OK": { label: "Sparepart OK", color: COLORS[2] },
-  } satisfies ChartConfig;
+  } as unknown as ChartConfig;
 
-  const validData = data
-    .filter((item) => item.value > 0)
-    .map((item) => ({ ...item, fill: chartConfig[item.name as keyof typeof chartConfig]?.color || "#CCCCCC" }));
+  const validData = data.filter((d) => d.value > 0).map((d) => ({ ...d, fill: chartConfig[d.name as keyof typeof chartConfig]?.color || "#CCCCCC" }));
 
   return (
-    <Card>
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Distribusi Sparepart</CardTitle>
-        <CardDescription>Berdasarkan status umur sparepart</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {validData.length > 0 ? (
-          <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[400px]">
-            <PieChart accessibilityLayer data={validData}>
-              <Pie dataKey="value" innerRadius={60} outerRadius={120}>
-                {validData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
-              </Pie>
-              <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-              <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-            </PieChart>
-          </ChartContainer>
-        ) : (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-500">Tidak ada data untuk ditampilkan</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+  <Card className="w-[1200px] h-[450px]">
+    <CardHeader className="items-center pb-0">
+      <CardTitle className="text-xl md:text-2xl font-bold tracking-tight">
+        Distribusi Sparepart
+      </CardTitle>
+      <CardDescription className="text-sm md:text-lg text-gray-500 dark:text-gray-400">
+        Berdasarkan status umur sparepart
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="flex items-center justify-center">
+      {validData.length > 0 ? (
+        <ChartContainer
+          config={chartConfig}
+          className="w-[500px] h-[300px]"  // 👈 bikin fix height & width
+        >
+          <PieChart>
+            <Pie
+              data={validData}
+              dataKey="value"
+              innerRadius={70}
+              outerRadius={125}
+              paddingAngle={0}
+            >
+              {validData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
+              ))}
+            </Pie>
+            <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+            <ChartLegend content={<ChartLegendContent nameKey="name" className="text-base font-medium" />} />
+          </PieChart>
+        </ChartContainer>
+      ) : (
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500">Tidak ada data untuk ditampilkan</p>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+);
 }
 
+/* --- SparepartTable (with export PDF) --- */
 export function SparepartTable({ data, showMachine = false }: SparepartTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -344,34 +437,54 @@ export function SparepartTable({ data, showMachine = false }: SparepartTableProp
   const [responsibilityFilter, setResponsibilityFilter] = useState("all");
   const itemsPerPage = 10;
 
-  const filteredData = data.filter(
-    (item) =>
-      (item.part.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.kodepart.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (categoryFilter === "all" || item.category === categoryFilter) &&
-      (statusFilter === "all" || item.status === statusFilter) &&
-      (responsibilityFilter === "all" || item.tanggungjawab === responsibilityFilter)
-  );
+  const filteredData = data.filter((item) => {
+    const matchSearch = (item.part || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.kodepart || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const matchCategory = categoryFilter === "all" || item.category === categoryFilter;
+    const matchStatus = statusFilter === "all" || item.status === statusFilter;
+    const matchResponsibility = responsibilityFilter === "all" || item.tanggungjawab === responsibilityFilter;
+    return matchSearch && matchCategory && matchStatus && matchResponsibility;
+  });
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentData = filteredData.slice(startIndex, endIndex);
+  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+  function exportPDF() {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    doc.text("Daftar Sparepart", 40, 40);
+    const body = filteredData.map((r) => [
+      showMachine ? r.mesin : undefined,
+      r.kodepart || "-",
+      r.part || "-",
+      r.category || "-",
+      r["lifetime(bulan)"] || "-",
+      r.penggantianterakhir || "-",
+      r.penggantianselanjutnya || "-",
+      r.status || "-",
+      r.tanggungjawab || "-",
+    ].filter((c) => c !== undefined));
+    const head = (showMachine ? ["Machine", "Code", "Name", "Category", "Lifetime", "Last Replace", "Next Replace", "Status", "Responsibility"]
+      : ["Code", "Name", "Category", "Lifetime", "Last Replace", "Next Replace", "Status", "Responsibility"]);
+    autoTable(doc, { startY: 60, head: [head], body, styles: { fontSize: 9 }});
+    doc.save(`sparepart_${new Date().toISOString().slice(0,10)}.pdf`);
+  }
 
   return (
     <Card>
-      <CardHeader className="items-center pb-0 flex justify-between">
-        <div className="space-y-1">
+      <CardHeader className="flex items-center justify-between pb-0">
+        <div>
           <CardTitle>Daftar Sparepart</CardTitle>
           <CardDescription>Daftar seluruh sparepart</CardDescription>
         </div>
-        <Button variant="outline" onClick={() => window.print()}>
-          <Printer />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={exportPDF}><Printer /></Button>
+        </div>
       </CardHeader>
+
       <CardContent>
-        <div className="flex items-center py-4 gap-2">
-          <Input placeholder="Search by part name or code..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="max-w-sm" />
+        <div className="flex items-center gap-2 py-4">
+          <Input placeholder="Search by part or code..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="max-w-sm" />
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-[180px]"><SelectValue placeholder="Category" /></SelectTrigger>
             <SelectContent>
@@ -398,6 +511,7 @@ export function SparepartTable({ data, showMachine = false }: SparepartTableProp
             </SelectContent>
           </Select>
         </div>
+
         <Table>
           <TableHeader>
             <TableRow>
@@ -412,9 +526,10 @@ export function SparepartTable({ data, showMachine = false }: SparepartTableProp
               <TableHead>Responsibility</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
-            {currentData.map((sp, index) => (
-              <TableRow key={index}>
+            {currentData.map((sp, idx) => (
+              <TableRow key={idx}>
                 {showMachine && <TableCell>{sp.mesin}</TableCell>}
                 <TableCell>{sp.kodepart}</TableCell>
                 <TableCell>{sp.part}</TableCell>
@@ -428,15 +543,12 @@ export function SparepartTable({ data, showMachine = false }: SparepartTableProp
             ))}
           </TableBody>
         </Table>
+
         {totalPages > 1 && (
           <div className="flex justify-center items-center space-x-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>
-              Previous
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Previous</Button>
             <span className="text-sm">Page {currentPage} of {totalPages} ({data.length} items)</span>
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>
-              Next
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Next</Button>
           </div>
         )}
       </CardContent>

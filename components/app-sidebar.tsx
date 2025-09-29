@@ -366,7 +366,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                               <SidebarMenuButton
                                 size="sm"
                                 className={`w-full justify-start hover:bg-muted ${
-                                  isActiveLink(item.url) ? "bg-slate-200" : ""
+                                  isActiveLink(item.url) ? "bg-slate-500" : ""
                                 }`}
                               >
                                 <span className="text-lg font-semibold">{item.title}</span>

@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const sheets = createSheetsClient();
 
     const po = "";
-    const kanbanType = "INTERNAL";
+    const kanbanType = body.kanbanType || "INTERNAL";
     const satuan = "";
     const harga = "";
     const tanggalpr = "";
