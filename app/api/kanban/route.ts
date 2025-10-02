@@ -1,21 +1,26 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { google } from "googleapis";
 
-/**
- * Robust Kanban API untuk:
- * - GET ?type=external/internal → baca KANBAN_EKSTERNAL / KANBAN_INTERNAL
- * - POST → append ke KANBAN_TRACKING (buat PR baru)
- * - PATCH → update data di KANBAN_TRACKING (PR → PO → Receipt)
- *
- * ENV wajib:
- * - sheet_id
- * - project_id
- * - private_key (replace \n dengan newline)
- * - private_key_id
- * - account_email
- * - client_id
- */
+// --- Interface untuk baris Kanban ---
+interface KanbanTrackingRow {
+  __sheetRow: number;
+  kodepart?: string;
+  kode_part?: string;
+  status?: string;
+  status_pemesanan?: string;
+  pr?: string;
+  PR?: string;
+  no_pr?: string;
+  tanggal_pr?: string;
+  po?: string;
+  no_po?: string;
+  tanggal_po?: string;
+  tanggal_receipt?: string;
+  no_receipt?: string;
+  [key: string]: any;
+}
 
+// --- Client Google Sheets ---
 function createSheetsClient() {
   const credentials = {
     type: process.env.TYPE || "service_account",
@@ -34,6 +39,7 @@ function createSheetsClient() {
   return google.sheets({ version: "v4", auth });
 }
 
+// --- Helper normalisasi key ---
 function normalizeKey(h: string) {
   return (h || "")
     .toString()
@@ -43,7 +49,7 @@ function normalizeKey(h: string) {
     .replace(/[^a-z0-9_]/g, "");
 }
 
-/** Read range dari worksheet */
+// --- Baca data dari sheet ---
 async function readSheetRange(sheetName: string, range = "A:Z") {
   const sheets = createSheetsClient();
   const resp = await sheets.spreadsheets.values.get({
@@ -53,7 +59,7 @@ async function readSheetRange(sheetName: string, range = "A:Z") {
   return resp.data.values || [];
 }
 
-/** Process rows: deteksi header + normalisasi */
+// --- Proses rows jadi object ---
 function processRows(rows: any[][]) {
   if (!rows || rows.length === 0) {
     return {
@@ -61,7 +67,7 @@ function processRows(rows: any[][]) {
       headers: [],
       dataRows: [],
       normalizedHeaderMap: {} as Record<string, number>,
-      normalized: [] as Record<string, any>[],
+      normalized: [] as KanbanTrackingRow[],
     };
   }
 
@@ -75,7 +81,7 @@ function processRows(rows: any[][]) {
       headers: [],
       dataRows: [],
       normalizedHeaderMap: {} as Record<string, number>,
-      normalized: [] as Record<string, any>[],
+      normalized: [] as KanbanTrackingRow[],
     };
   }
 
@@ -96,14 +102,14 @@ function processRows(rows: any[][]) {
         obj[k] = (row[idx] ?? "").toString();
       });
       const sheetRowNumber = headerRowIndex + 2 + rIdx;
-      return { __sheetRow: sheetRowNumber, ...obj };
+      return { __sheetRow: sheetRowNumber, ...obj } as KanbanTrackingRow;
     })
-    .filter(Boolean) as Record<string, any>[];
+    .filter(Boolean) as KanbanTrackingRow[];
 
   return { headerRowIndex, headers, dataRows, normalizedHeaderMap, normalized };
 }
 
-/** Worksheet resolver */
+// --- Tentukan worksheet berdasarkan type ---
 function worksheetForType(type?: string) {
   if (!type) return "KANBAN_EKSTERNAL";
   const t = String(type).toLowerCase();
@@ -111,21 +117,59 @@ function worksheetForType(type?: string) {
   return "KANBAN_EKSTERNAL";
 }
 
-/** GET */
+// --- GET API ---
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const type = url.searchParams.get("type") || "external";
     const worksheet = worksheetForType(type);
 
+    // ambil data eksternal/internal
     const rows = await readSheetRange(worksheet, "A1:R1000");
     const processed = processRows(rows);
+
+    // ambil data tracking
+    const trackingRows = await readSheetRange("KANBAN_TRACKING", "A1:Z1000");
+    const processedTracking = processRows(trackingRows);
+
+    // merge dengan tracking
+    const eksternal = processed.normalized.map((row) => {
+      const kodePart = row.kodepart || row.kode_part || "";
+
+      const track = processedTracking.normalized.find(
+        (t) => (t.kodepart || t.kode_part || "") === kodePart
+      );
+
+      let kanbanStatus = "ignore";
+      if (!track && (row.status_pemesanan || "").toLowerCase().includes("siapkan")) {
+        kanbanStatus = "not_started";
+      } else if (track) {
+        if ((track.status || "").toLowerCase().includes("diterima")) {
+          kanbanStatus = "completed";
+        } else {
+          kanbanStatus = "in_progress";
+        }
+      }
+
+      return {
+        ...row,
+        ...track,
+        kanbanStatus,
+        status_pemesanan: track?.status || row.status_pemesanan,
+        no_pr: track?.pr || track?.PR || row.no_pr || "",
+        tanggal_pr: track?.tanggal_pr || row.tanggal_pr,
+        no_po: track?.po || row.no_po,
+        tanggal_po: track?.tanggal_po || row.tanggal_po,
+        tanggal_receipt: track?.tanggal_receipt || row.tanggal_receipt,
+        no_receipt: track?.no_receipt || row.no_receipt,
+      } as KanbanTrackingRow & { kanbanStatus: string };
+    });
 
     return NextResponse.json({
       success: true,
       worksheet,
-      totalRows: processed.dataRows.length,
-      data: processed.normalized,
+      totalRows: eksternal.length,
+      data: eksternal,
       headers: processed.headers,
     });
   } catch (err: any) {
@@ -137,57 +181,53 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/** POST → append PR ke KANBAN_TRACKING */
+// --- POST → buat PR baru ---
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const payload = (body && body.payload) ? body.payload : body;
+    const payload = body.payload ?? body;
 
     const sheets = createSheetsClient();
-    const targetRange = "KANBAN_TRACKING";
 
     const values = [
-      payload.date ?? "",            // Tanggal
-      payload.noPr ?? "",            // PR
-      payload.tanggalpr ?? "",       // Tanggal PR
-      payload.po ?? "",              // PO
-      payload.tanggalpo ?? "",       // Tanggal PO
-      payload.kanbanType ?? "EXTERNAL",
-      payload.codePart ?? "",
-      payload.part ?? "",
-      payload.formMonth ?? "",
-      payload.quantity ?? "",
-      payload.uom ?? "",
-      payload.satuan ?? "",
-      payload.harga ?? "",
-      payload.vendor ?? "",
-      payload.leadtime ?? "",
-      payload.eta ?? "",
-      payload.tanggalreceipt ?? "",
-      payload.noreceipt ?? "",
-      payload.status ?? "PR Dibuat",
-      payload.keterangan ?? "",
-      payload.pic ?? "",
+      payload.Tanggal ?? new Date().toISOString().split("T")[0], // A: Tanggal
+      payload.PR ?? `PR-${Date.now()}`,                         // B: PR
+      payload.tanggalpr ?? new Date().toISOString().split("T")[0], // C: Tanggal PR
+      "",                                                       // D: PO
+      "",                                                       // E: Tanggal PO
+      payload["Tipe Kanban"] ?? "EKSTERNAL",                    // F: Tipe Kanban
+      payload["Kode Part"] ?? "",                               // G: Kode Part
+      payload.Part ?? "",                                       // H: Part
+      payload["Untuk Bulan"] ?? "",                             // I: Untuk Bulan
+      payload["Qty Order"] ?? "",                               // J: Qty Order
+      payload.UOM ?? "",                                        // K: UOM
+      payload.Satuan ?? "",                                     // L: Satuan
+      payload.Harga ?? "",                                      // M: Harga
+      payload.Supplier ?? "",                                   // N: Supplier
+      payload.LeadTime ?? "",                                   // O: Lead Time
+      payload.ETA ?? "",                                        // P: ETA
+      "",                                                       // Q: Tanggal Receipt
+      "",                                                       // R: No Receipt
+      payload.Status ?? "PR Dibuat",                            // S: Status
+      payload.Keterangan ?? "",                                 // T: Keterangan
+      payload.PIC ?? "",                                        // U: PIC
     ];
 
-    const appendResp = await sheets.spreadsheets.values.append({
+    await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.sheet_id!,
-      range: targetRange,
+      range: `KANBAN_TRACKING!A:U`,
       valueInputOption: "USER_ENTERED",
       requestBody: { values: [values] },
     });
 
-    return NextResponse.json({ success: true, appended: appendResp.data });
+    return NextResponse.json({ success: true, message: "PR created", values });
   } catch (err: any) {
     console.error("POST /api/kanban error:", err);
-    return NextResponse.json(
-      { success: false, error: err.message || "Unknown" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
-/** PATCH → update data di KANBAN_TRACKING */
+// --- PATCH → update PR → PO → Receipt ---
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
@@ -195,67 +235,51 @@ export async function PATCH(request: NextRequest) {
 
     const sheets = createSheetsClient();
 
-    // Baca semua tracking
+    // baca data tracking
     const resp = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.sheet_id!,
-      range: `KANBAN_TRACKING!A:Z`,
+      range: `KANBAN_TRACKING!A:U`,
     });
     const rows = resp.data.values || [];
     if (rows.length === 0)
-      return NextResponse.json({ success: false, error: "KANBAN_TRACKING empty" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Sheet kosong" }, { status: 404 });
 
-    const processed = processRows(rows);
-    const headerToIndex = processed.normalizedHeaderMap;
+    const data = rows.slice(1);
 
-    // Tentukan row target
-    let targetRowNumber: number | null = null;
-    if (payload.sheetRow) {
-      targetRowNumber = Number(payload.sheetRow);
-    } else if (payload.noPr) {
-      const foundIndex = processed.normalized.findIndex((r: any) => {
-        const candidate = (r.nopr || r["no_pr"] || r.prno || r.pr || "").toString().trim();
-        return candidate === payload.noPr.toString().trim();
-      });
-      if (foundIndex !== -1) targetRowNumber = processed.headerRowIndex + 2 + foundIndex;
-    }
+    // cari row berdasarkan PR (kolom B = index 1)
+    const targetIndex = data.findIndex(
+      (r) => (r[1] || "").toString().trim() === (payload.noPr || "").toString().trim()
+    );
+    if (targetIndex === -1)
+      return NextResponse.json({ success: false, error: "PR tidak ditemukan" }, { status: 404 });
 
-    if (!targetRowNumber) {
-      return NextResponse.json(
-        { success: false, error: "Target row not found. Provide sheetRow or matching noPr." },
-        { status: 404 }
-      );
-    }
+    const targetRowNumber = targetIndex + 2; // header + offset
 
     const updates: Array<{ range: string; values: any[][] }> = [];
 
-    const setCellByHeaderCandidates = (candidates: string[], value: string) => {
-      for (const c of candidates) {
-        const idx = headerToIndex[normalizeKey(c)];
-        if (idx !== undefined) {
-          let col = idx + 1;
-          let letter = "";
-          while (col > 0) {
-            const rem = (col - 1) % 26;
-            letter = String.fromCharCode(65 + rem) + letter;
-            col = Math.floor((col - 1) / 26);
-          }
-          updates.push({ range: `KANBAN_TRACKING!${letter}${targetRowNumber}`, values: [[value]] });
-          return true;
-        }
-      }
-      return false;
-    };
+    // update PO
+    if (payload.po)
+      updates.push({ range: `KANBAN_TRACKING!D${targetRowNumber}`, values: [[payload.po]] });
+    if (payload.tanggalpo)
+      updates.push({ range: `KANBAN_TRACKING!E${targetRowNumber}`, values: [[payload.tanggalpo]] });
 
-    // Update kolom status/progress
-    if (payload.status) setCellByHeaderCandidates(["status"], payload.status);
-    if (payload.po) setCellByHeaderCandidates(["po"], payload.po);
-    if (payload.tanggalpo) setCellByHeaderCandidates(["tanggalpo", "tanggal_po"], payload.tanggalpo);
-    if (payload.tanggalreceipt) setCellByHeaderCandidates(["tanggalreceipt", "tanggal_receipt"], payload.tanggalreceipt);
-    if (payload.noreceipt) setCellByHeaderCandidates(["noreceipt", "no_receipt"], payload.noreceipt);
-    if (payload.eta) setCellByHeaderCandidates(["eta"], payload.eta);
+    // update Receipt
+    if (payload.tanggalreceipt)
+      updates.push({ range: `KANBAN_TRACKING!Q${targetRowNumber}`, values: [[payload.tanggalreceipt]] });
+    if (payload.noreceipt)
+      updates.push({ range: `KANBAN_TRACKING!R${targetRowNumber}`, values: [[payload.noreceipt]] });
+
+    // status otomatis
+    if (payload.status) {
+      updates.push({ range: `KANBAN_TRACKING!S${targetRowNumber}`, values: [[payload.status]] });
+    } else if (payload.po) {
+      updates.push({ range: `KANBAN_TRACKING!S${targetRowNumber}`, values: [["PO Diajukan"]] });
+    } else if (payload.tanggalreceipt) {
+      updates.push({ range: `KANBAN_TRACKING!S${targetRowNumber}`, values: [["Sudah Diterima"]] });
+    }
 
     if (updates.length === 0)
-      return NextResponse.json({ success: false, error: "No valid fields to update" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Tidak ada field yang diupdate" }, { status: 400 });
 
     await sheets.spreadsheets.values.batchUpdate({
       spreadsheetId: process.env.sheet_id!,
@@ -268,9 +292,6 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Updated", updates });
   } catch (err: any) {
     console.error("PATCH /api/kanban error:", err);
-    return NextResponse.json(
-      { success: false, error: err.message || "Unknown" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
