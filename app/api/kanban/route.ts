@@ -133,37 +133,45 @@ export async function GET(request: NextRequest) {
     const processedTracking = processRows(trackingRows);
 
     // merge dengan tracking
-    const eksternal = processed.normalized.map((row) => {
-      const kodePart = row.kodepart || row.kode_part || "";
+  const eksternal = processed.normalized.map((row) => {
+    const kodePart = row.kodepart || row.kode_part || "";
 
-      const track = processedTracking.normalized.find(
-        (t) => (t.kodepart || t.kode_part || "") === kodePart
-      );
+    const track = processedTracking.normalized.find(
+      (t) => (t.kodepart || t.kode_part || "") === kodePart
+    );
 
-      let kanbanStatus = "ignore";
-      if (!track && (row.status_pemesanan || "").toLowerCase().includes("siapkan")) {
-        kanbanStatus = "not_started";
-      } else if (track) {
-        if ((track.status || "").toLowerCase().includes("diterima")) {
-          kanbanStatus = "completed";
-        } else {
-          kanbanStatus = "in_progress";
-        }
+    // default status
+    let kanbanStatus = "ignore";
+    const mergedStatus = (track?.status || row.status || row.status_pemesanan || "").toLowerCase();
+
+    if (!track && (row.status_pemesanan || "").toLowerCase().includes("siapkan")) {
+      kanbanStatus = "not_started";
+    } else if (track) {
+      if (
+        mergedStatus.includes("selesai") ||
+        mergedStatus.includes("diterima") ||
+        mergedStatus.includes("sudah")
+      ) {
+        kanbanStatus = "completed";
+      } else {
+        kanbanStatus = "in_progress";
       }
+    }
 
-      return {
-        ...row,
-        ...track,
-        kanbanStatus,
-        status_pemesanan: track?.status || row.status_pemesanan,
-        no_pr: track?.pr || track?.PR || row.no_pr || "",
-        tanggal_pr: track?.tanggal_pr || row.tanggal_pr,
-        no_po: track?.po || row.no_po,
-        tanggal_po: track?.tanggal_po || row.tanggal_po,
-        tanggal_receipt: track?.tanggal_receipt || row.tanggal_receipt,
-        no_receipt: track?.no_receipt || row.no_receipt,
-      } as KanbanTrackingRow & { kanbanStatus: string };
-    });
+    return {
+      ...row,
+      ...track,
+      kanbanStatus,
+      status: track?.status || row.status || row.status_pemesanan || "",
+      status_pemesanan: row.status_pemesanan || "",
+      no_pr: track?.pr || track?.PR || row.no_pr || "",
+      tanggal_pr: track?.tanggal_pr || row.tanggal_pr,
+      no_po: track?.po || row.no_po,
+      tanggal_po: track?.tanggal_po || row.tanggal_po,
+      tanggal_receipt: track?.tanggal_receipt || row.tanggal_receipt,
+      no_receipt: track?.no_receipt || row.no_receipt,
+    } as KanbanTrackingRow & { kanbanStatus: string };
+  });
 
     return NextResponse.json({
       success: true,
@@ -262,21 +270,28 @@ export async function PATCH(request: NextRequest) {
       updates.push({ range: `KANBAN_TRACKING!D${targetRowNumber}`, values: [[payload.po]] });
     if (payload.tanggalpo)
       updates.push({ range: `KANBAN_TRACKING!E${targetRowNumber}`, values: [[payload.tanggalpo]] });
+    if (payload.harga)
+      updates.push({ range: `KANBAN_TRACKING!M${targetRowNumber}`, values: [[payload.harga]] });
+    if (payload.leadtime)
+      updates.push({ range: `KANBAN_TRACKING!O${targetRowNumber}`, values: [[payload.leadtime]] });
+    if (payload.eta)
+      updates.push({ range: `KANBAN_TRACKING!P${targetRowNumber}`, values: [[payload.eta]] });
 
     // update Receipt
-    if (payload.tanggalreceipt)
-      updates.push({ range: `KANBAN_TRACKING!Q${targetRowNumber}`, values: [[payload.tanggalreceipt]] });
-    if (payload.noreceipt)
-      updates.push({ range: `KANBAN_TRACKING!R${targetRowNumber}`, values: [[payload.noreceipt]] });
+      if (payload.tanggalreceipt)
+        updates.push({ range: `KANBAN_TRACKING!Q${targetRowNumber}`, values: [[payload.tanggalreceipt]] });
+      if (payload.noreceipt)
+        updates.push({ range: `KANBAN_TRACKING!R${targetRowNumber}`, values: [[payload.noreceipt]] });
 
-    // status otomatis
-    if (payload.status) {
-      updates.push({ range: `KANBAN_TRACKING!S${targetRowNumber}`, values: [[payload.status]] });
-    } else if (payload.po) {
-      updates.push({ range: `KANBAN_TRACKING!S${targetRowNumber}`, values: [["PO Diajukan"]] });
-    } else if (payload.tanggalreceipt) {
-      updates.push({ range: `KANBAN_TRACKING!S${targetRowNumber}`, values: [["Sudah Diterima"]] });
-    }
+      // status otomatis
+      if (payload.status) {
+        updates.push({ range: `KANBAN_TRACKING!S${targetRowNumber}`, values: [[payload.status]] });
+      } else if (payload.po) {
+        updates.push({ range: `KANBAN_TRACKING!S${targetRowNumber}`, values: [["Completed"]] });
+      } else if (payload.tanggalreceipt) {
+        updates.push({ range: `KANBAN_TRACKING!S${targetRowNumber}`, values: [["Selesai"]] });
+        updates.push({ range: `KANBAN_TRACKING!T${targetRowNumber}`, values: [[new Date().toISOString().split("T")[0]]] }); // simpan tanggal selesai
+      }
 
     if (updates.length === 0)
       return NextResponse.json({ success: false, error: "Tidak ada field yang diupdate" }, { status: 400 });
