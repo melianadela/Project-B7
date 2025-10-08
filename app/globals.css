@@ -1,5 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Transition smooth saat ganti tema */
+html {
+  transition: background-color 0.3s, color 0.3s;
+}
 
 @custom-variant dark (&:is(.dark *));
 

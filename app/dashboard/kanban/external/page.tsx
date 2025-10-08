@@ -89,7 +89,7 @@ export default function KanbanExternalPage() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<KanbanRow[]>([]);
   const [processingKey, setProcessingKey] = useState<string | null>(null);
-  const [tab, setTab] = useState<"board" | "list">("board");
+  const [tab, setTab] = useState<"board" | "list" | "monitoring">("board");
   const [search, setSearch] = useState("");
   const [showListModal, setShowListModal] = useState<null | "total" | "harusDipesan">(null);
   const [showForm, setShowForm] = useState(false);
@@ -105,6 +105,7 @@ export default function KanbanExternalPage() {
     vendor: "",
     pic: "",
   });
+  const [darkMode, setDarkMode] = useState(false);
 
   // PO form
   const [showPOForm, setShowPOForm] = useState(false);
@@ -606,6 +607,57 @@ return;
     doc.save("Daftar_Sparepart.pdf");
   };
 
+  const exportMonitoringPDF = () => {
+    const doc = new jsPDF("l", "pt", "a4");
+
+    const tableColumn = [
+      "Tipe",
+      "Tanggal",
+      "PR",
+      "PO",
+      "Kode Part",
+      "Part",
+      "Vendor",
+      "Status",
+    ];
+
+    const tableRows = rows
+      .filter((r) => r.noPr || r.PR || r.po || r.no_po)
+      .map((r) => [
+        r.tipe_kanban || "Eksternal",
+        r.tanggal || "-",
+        r.noPr || r.PR || "-",
+        r.no_po || r.po || "-",
+        r.kodepart || "-",
+        r.part || "-",
+        r.vendor || "-",
+        r.status || "-",
+      ]);
+
+    doc.setFontSize(12);
+    doc.text("Monitoring Kanban - Data PR dan PO", 40, 30);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 50,
+      theme: "grid",
+      styles: { halign: "center", fontSize: 9 },
+      headStyles: {
+        fillColor: [67, 156, 69],
+        textColor: 255,
+        halign: "center",
+      },
+      columnStyles: {
+        4: { halign: "center" },
+        5: { halign: "left" },
+        7: { halign: "center" },
+      },
+    });
+
+    doc.save("Monitoring_Kanban.pdf");
+  };
+
   if (loading) {
     return (
       <div className="h-72 flex items-center justify-center">
@@ -618,15 +670,11 @@ return;
     <div className="p-6 space-y-6">
       <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Kanban Eksternal</h1>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {/* Total Sparepart */}
         <Card
           onClick={() => setShowListModal("total")}
-          className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 
-                    cursor-pointer transition-all duration-200 ease-out
-                    hover:-translate-y-1 hover:shadow-lg
-                    hover:bg-blue-100 dark:hover:bg-blue-800/40
-                    active:scale-95"
+          className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:bg-blue-100 dark:hover:bg-blue-800/40 active:scale-95"
         >
           <CardContent>
             <div className="text-sm text-slate-600 dark:text-slate-300">
@@ -639,17 +687,31 @@ return;
         {/* Part Harus Dipesan */}
         <Card
           onClick={() => setShowListModal("harusDipesan")}
-          className="bg-red-50 border-red-200 dark:bg-red-900/20 
-                    cursor-pointer transition-all duration-200 ease-out
-                    hover:-translate-y-1 hover:shadow-lg
-                    hover:bg-red-100 dark:hover:bg-red-800/40
-                    active:scale-95"
+          className="bg-red-50 border-red-200 dark:bg-red-900/20 cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:bg-red-100 dark:hover:bg-red-800/40 active:scale-95"
         >
           <CardContent>
             <div className="text-sm text-slate-600 dark:text-slate-300">
               Part Harus Dipesan Bulan Ini
             </div>
             <div className="text-2xl font-bold">{partHarusDipesan} Item</div>
+          </CardContent>
+        </Card>
+
+        {/* 🟢 Monitoring Kanban */}
+        <Card
+          onClick={() => setTab("monitoring")}
+          className="bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:bg-emerald-100 dark:hover:bg-emerald-800/40 active:scale-95"
+        >
+          <CardContent>
+            <div className="text-sm text-slate-600 dark:text-slate-300">
+              Monitoring Kanban
+            </div>
+            <div className="text-2xl font-bold text-emerald-700 flex items-center gap-2">
+              📊
+              <span className="text-base font-medium text-emerald-700">
+                Lihat Status PR & PO
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -821,11 +883,92 @@ return;
           </>
         )}
 
+        {tab === "monitoring" && (
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6 mt-6 text-slate-900 dark:text-slate-100">
+            {/* Header Title + Button Export */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Monitoring Kanban</h2>
+              <Button
+                onClick={() => exportMonitoringPDF()}
+                className="bg-red-600 text-white flex items-center gap-2"
+              >
+                <Printer size={16} /> Export PDF
+              </Button>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm border">
+                <thead className="bg-slate-100 dark:bg-slate-800">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Tipe</th>
+                    <th className="px-3 py-2 text-left">Tanggal</th>
+                    <th className="px-3 py-2 text-left">PR</th>
+                    <th className="px-3 py-2 text-left">PO</th>
+                    <th className="px-3 py-2 text-left">Kode Part</th>
+                    <th className="px-3 py-2 text-left">Part</th>
+                    <th className="px-3 py-2 text-left">Vendor</th>
+                    <th className="px-3 py-2 text-left">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows
+                    .filter((r) => r.noPr || r.PR || r.po || r.no_po) // hanya yg punya PR/PO
+                    .map((r, idx) => (
+                      <tr key={idx} className="border-t border-gray-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <td className="px-3 py-2">{r.tipe_kanban || "Eksternal"}</td>
+                        <td className="px-3 py-2">{r.tanggal || "-"}</td>
+                        <td className="px-3 py-2">{r.noPr || r.PR || "-"}</td>
+                        <td className="px-3 py-2">{r.no_po || r.po || "-"}</td>
+                        <td className="px-3 py-2">{r.kodepart}</td>
+                        <td className="px-3 py-2">{r.part}</td>
+                        <td className="px-3 py-2">{r.vendor}</td>
+                        <td className="px-3 py-2">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              r.status?.toLowerCase().includes("sudah")
+                                ? "bg-green-100 text-green-700"
+                                : r.status?.toLowerCase().includes("po")
+                                ? "bg-orange-100 text-orange-700"
+                                : r.status?.toLowerCase().includes("pr")
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {r.status || "-"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+
+                  {rows.filter((r) => r.noPr || r.PR || r.po || r.no_po).length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="text-center py-4 text-slate-500">
+                        Tidak ada data PR/PO ditemukan
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Tombol kembali di bawah */}
+            <div className="flex justify-end mt-6">
+              <Button
+                className="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700"
+                onClick={() => setTab("board")}
+              >
+                ← Kembali
+              </Button>
+            </div>
+          </div>
+        )}
+
       {/* PR modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[400px]">
-            <h2 className="text-lg font-bold mb-4">Form Input PR</h2>
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg p-6 w-[400px] border border-slate-200 dark:border-slate-700 transition-colors duration-300">
+            <h2 className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-100">Form Input PR</h2>
 
             <div className="space-y-3">
               <div>
@@ -850,7 +993,11 @@ return;
                 <label className="text-sm font-medium">Kode Part *</label>
                 <input
                   type="text"
-                  className="w-full border rounded px-2 py-1 bg-gray-100"
+                  className="w-full border rounded px-2 py-1 
+                            bg-gray-100 dark:bg-slate-700 
+                            border-gray-300 dark:border-slate-600 
+                            text-slate-900 dark:text-slate-100 
+                            cursor-not-allowed"
                   value={formData.kodePart}
                   readOnly
                 />
@@ -859,7 +1006,11 @@ return;
                 <label className="text-sm font-medium">Nama Part *</label>
                 <input
                   type="text"
-                  className="w-full border rounded px-2 py-1 bg-gray-100"
+                  className="w-full border rounded px-2 py-1 
+                            bg-gray-100 dark:bg-slate-700 
+                            border-gray-300 dark:border-slate-600 
+                            text-slate-900 dark:text-slate-100 
+                            cursor-not-allowed"
                   value={formData.namaPart}
                   readOnly
                 />
@@ -886,7 +1037,11 @@ return;
                 <div className="flex-1">
                   <label className="text-sm font-medium">UOM *</label>
                   <select
-                    className="w-full border rounded px-2 py-1 bg-white"
+                    className="w-full border rounded px-2 py-1 
+                              bg-gray-100 dark:bg-slate-700 
+                              border-gray-300 dark:border-slate-600 
+                              text-slate-900 dark:text-slate-100 
+                              cursor-not-allowed"
                     value={formData.uom}
                     onChange={(e) => setFormData({ ...formData, uom: e.target.value })}
                   >
@@ -902,7 +1057,11 @@ return;
                 <label className="text-sm font-medium">Vendor *</label>
                 <input
                   type="text"
-                  className="w-full border rounded px-2 py-1 bg-gray-100"
+                  className="w-full border rounded px-2 py-1 
+                            bg-gray-100 dark:bg-slate-700 
+                            border-gray-300 dark:border-slate-600 
+                            text-slate-900 dark:text-slate-100 
+                            cursor-not-allowed"
                   value={formData.vendor}
                   readOnly
                 />
@@ -985,15 +1144,18 @@ return;
       {/* PO modal */}
       {showPOForm && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[400px]">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg p-6 w-[400px] text-slate-900 dark:text-slate-100">
             <h2 className="text-lg font-bold mb-4">Input Data PO</h2>
 
             <div className="space-y-3">
               <div>
                 <label className="text-sm font-medium">No PO *</label>
                 <input
-                  type="text"
-                  className="w-full border rounded px-2 py-1"
+                  className="w-full border rounded px-2 py-1 
+                            bg-white dark:bg-slate-800 
+                            border-gray-300 dark:border-slate-700 
+                            text-slate-900 dark:text-slate-100 
+                            focus:ring-2 focus:ring-blue-500"
                   value={formPO.noPO}
                   onChange={(e) => setFormPO({ ...formPO, noPO: e.target.value })}
                 />
@@ -1002,7 +1164,11 @@ return;
                 <label className="text-sm font-medium">Tanggal PO *</label>
                 <input
                   type="date"
-                  className="w-full border rounded px-2 py-1"
+                  className="w-full border rounded px-2 py-1 
+                            bg-white dark:bg-slate-800 
+                            border-gray-300 dark:border-slate-700 
+                            text-slate-900 dark:text-slate-100 
+                            focus:ring-2 focus:ring-blue-500"
                   value={formPO.tanggalPO}
                   onChange={(e) => setFormPO({ ...formPO, tanggalPO: e.target.value })}
                 />
@@ -1011,7 +1177,11 @@ return;
                 <label className="text-sm font-medium">Leadtime (hari) *</label>
                 <input
                   type="number"
-                  className="w-full border rounded px-2 py-1"
+                  className="w-full border rounded px-2 py-1 
+                            bg-white dark:bg-slate-800 
+                            border-gray-300 dark:border-slate-700 
+                            text-slate-900 dark:text-slate-100 
+                            focus:ring-2 focus:ring-blue-500"
                   value={formPO.leadtime}
                   onChange={(e) => setFormPO({ ...formPO, leadtime: e.target.value })}
                 />
@@ -1019,7 +1189,11 @@ return;
               <label className="text-sm font-medium">Harga *</label>
               <input
                 type="number"
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 
+                            bg-white dark:bg-slate-800 
+                            border-gray-300 dark:border-slate-700 
+                            text-slate-900 dark:text-slate-100 
+                            focus:ring-2 focus:ring-blue-500"
                 value={formPO.harga}
                 onChange={(e) => setFormPO({ ...formPO, harga: e.target.value })}
               />
@@ -1027,7 +1201,11 @@ return;
               <label className="text-sm font-medium">ETA *</label>
               <input
                 type="date"
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 
+                            bg-white dark:bg-slate-800 
+                            border-gray-300 dark:border-slate-700 
+                            text-slate-900 dark:text-slate-100 
+                            focus:ring-2 focus:ring-blue-500"
                 value={formPO.eta}
                 onChange={(e) => setFormPO({ ...formPO, eta: e.target.value })}
               />
@@ -1064,7 +1242,7 @@ return;
       {/* Receipt modal */}
       {showReceiptForm && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[400px]">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg p-6 w-[400px] text-slate-900 dark:text-slate-100">
             <h2 className="text-lg font-bold mb-4">Input Receipt</h2>
 
             <div className="space-y-3">
@@ -1072,7 +1250,11 @@ return;
                 <label className="text-sm font-medium">Tanggal Receipt *</label>
                 <input
                   type="date"
-                  className="w-full border rounded px-2 py-1"
+                  className="w-full border rounded px-2 py-1 
+                            bg-white dark:bg-slate-800 
+                            border-gray-300 dark:border-slate-700 
+                            text-slate-900 dark:text-slate-100 
+                            focus:ring-2 focus:ring-green-500"
                   value={formReceipt.tanggalReceipt}
                   onChange={(e) => setFormReceipt({ ...formReceipt, tanggalReceipt: e.target.value })}
                 />
@@ -1081,7 +1263,11 @@ return;
                 <label className="text-sm font-medium">No Receipt *</label>
                 <input
                   type="text"
-                  className="w-full border rounded px-2 py-1"
+                  className="w-full border rounded px-2 py-1 
+                            bg-white dark:bg-slate-800 
+                            border-gray-300 dark:border-slate-700 
+                            text-slate-900 dark:text-slate-100 
+                            focus:ring-2 focus:ring-green-500"
                   value={formReceipt.noReceipt}
                   onChange={(e) => setFormReceipt({ ...formReceipt, noReceipt: e.target.value })}
                 />
@@ -1113,7 +1299,7 @@ return;
       {/* List Modal */}
       {showListModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[95%] max-w-[1200px] max-h-[85vh] overflow-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6 mt-6 text-slate-900 dark:text-slate-100">
             
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
@@ -1138,28 +1324,47 @@ return;
               </div>
             </div>
 
-            {/* Search Bar */}
-            <div className="flex items-center border rounded-full px-3 py-2 mb-3 w-96 bg-gray-50">
-              <svg xmlns="http://www.w3.org/2000/svg" 
-                  className="h-5 w-5 text-gray-400 mr-2" 
-                  fill="none" viewBox="0 0 24 24" 
-                  stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M21 21l-4.35-4.35M9 17a8 8 0 100-16 8 8 0 000 16z" />
-              </svg>
-              <input 
-                value={search} 
-                onChange={(e) => setSearch(e.target.value)} 
-                placeholder="Search Part/Kode Part" 
-                className="bg-transparent outline-none w-full text-sm"
-              />
+            <div className="flex justify-between items-center mb-6 mt-2">
+              {/* Search bar */}
+              <div className="relative w-full max-w-sm">
+                <div
+                  className="absolute inset-y-0 left-0 flex items-center pl-3
+                            text-gray-500 dark:text-gray-400"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18.5a7.5 7.5 0 006.15-1.85z"
+                    />
+                  </svg>
+                </div>
+
+                <input
+                  type="text"
+                  placeholder="Search Part / Kode Part"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2.5 rounded-lg border
+                            focus:outline-none focus:ring-2 focus:ring-blue-500
+                            bg-white text-gray-900 placeholder-gray-400 border-gray-300
+                            dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:border-gray-700
+                            transition-all duration-300 shadow-sm"
+                />
+              </div>
             </div>
 
             {/* Table */}
             <table className="min-w-full text-sm border">
-              <thead className="bg-slate-100">
-                <tr>
+              <thead className="bg-slate-100 dark:bg-gray-800 dark:text-gray-100">
+              <tr className="border-b border-slate-200 dark:border-gray-700">
                   <th className="px-3 py-2 text-left">Part</th>
                   <th className="px-3 py-2 text-left">Kode Part</th>
                   <th className="px-3 py-2 text-left">Kebutuhan Per Tahun</th>
@@ -1172,28 +1377,102 @@ return;
                 </tr>
               </thead>
               <tbody>
-                {filteredRows.map((r, idx) => (
-                  <tr key={idx} className="border-t hover:bg-slate-50">
-                    <td className="px-3 py-2">{r.part}</td>
-                    <td className="px-3 py-2">{r.kodepart}</td>
-                    <td className="px-3 py-2">{r.kebutuhan_per_tahun || "-"}</td>
-                    <td className="px-3 py-2">{r.safety_stock_statistik || "-"}</td>
-                    <td className="px-3 py-2">{r.total_kebutuhan_per_tahun || "-"}</td>
-                    <td className="px-3 py-2">{r.sisa_qty_di_vendor || "-"}</td>
-                    <td className="px-3 py-2">{r.on_hand_invenotry || "-"}</td>
-                    <td className="px-3 py-2">{r.vendor}</td>
-                    <td className="px-3 py-2">
-                      <Button variant="ghost" size="icon">
-                        ✏️
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {(showListModal === "total" ? rows : rows.filter((r) => {
+                    const extStatus = (r.status_pemesanan || r.status || "").toString().toLowerCase();
+                    const flagged =
+                      extStatus.includes("siap") ||
+                      extStatus.includes("siapkan") ||
+                      extStatus.includes("harus") ||
+                      extStatus.includes("minta");
 
-                {filteredRows.length === 0 && (
+                    const now = new Date();
+                    const currentMonth = now.getMonth();
+                    const currentYear = now.getFullYear();
+
+                    if (!r.deadline_pemesanan)
+                      return flagged && !r.PR && !r.po && !r.noPr;
+
+                    const parsed = Date.parse(r.deadline_pemesanan);
+                    if (!isNaN(parsed)) {
+                      const d = new Date(parsed);
+                      return (
+                        d.getMonth() === currentMonth &&
+                        d.getFullYear() === currentYear &&
+                        !r.PR && !r.po && !r.noPr
+                      );
+                    }
+                    return flagged && !r.PR && !r.po && !r.noPr;
+                  }))
+                  // 🔹 apply filter pencarian (search bar)
+                  .filter((r) =>
+                    (r.part || "").toLowerCase().includes(search.toLowerCase()) ||
+                    (r.kodepart || "").toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map((r, idx) => (
+                    <tr
+                      key={idx}
+                      className="border-t border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800/60"
+                    >
+                      <td className="px-3 py-2">{r.part}</td>
+                      <td className="px-3 py-2">{r.kodepart}</td>
+                      <td className="px-3 py-2">{r.kebutuhan_per_tahun || "-"}</td>
+                      <td className="px-3 py-2">{r.safety_stock_statistik || "-"}</td>
+                      <td className="px-3 py-2">{r.total_kebutuhan_per_tahun || "-"}</td>
+                      <td className="px-3 py-2">{r.sisa_qty_di_vendor || "-"}</td>
+                      <td className="px-3 py-2">{r.on_hand_invenotry || "-"}</td>
+                      <td className="px-3 py-2">{r.vendor}</td>
+                      <td className="px-3 py-2">
+                        {showListModal === "harusDipesan" &&
+                          getKanbanStatusFromRow(r) === "not_started" && (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setShowListModal(null); // ✅ Tutup modal list dulu
+                                createPR(r);            // ✅ Lalu buka form PR
+                              }}
+                              disabled={processingKey === (r.kodepart || r.part)}
+                            >
+                              Buat PR
+                            </Button>
+                          )}
+                      </td>
+                    </tr>
+                  ))}
+
+                {/* fallback jika kosong */}
+                {(showListModal === "harusDipesan"
+                  ? rows.filter((r) => {
+                      const extStatus = (r.status_pemesanan || r.status || "").toString().toLowerCase();
+                      const flagged =
+                        extStatus.includes("siap") ||
+                        extStatus.includes("siapkan") ||
+                        extStatus.includes("harus") ||
+                        extStatus.includes("minta");
+
+                      const now = new Date();
+                      const currentMonth = now.getMonth();
+                      const currentYear = now.getFullYear();
+
+                      if (!r.deadline_pemesanan)
+                        return flagged && !r.PR && !r.po && !r.noPr;
+
+                      const parsed = Date.parse(r.deadline_pemesanan);
+                      if (!isNaN(parsed)) {
+                        const d = new Date(parsed);
+                        return (
+                          d.getMonth() === currentMonth &&
+                          d.getFullYear() === currentYear &&
+                          !r.PR && !r.po && !r.noPr
+                        );
+                      }
+                      return flagged && !r.PR && !r.po && !r.noPr;
+                    }).length === 0
+                  : rows.length === 0) && (
                   <tr>
                     <td colSpan={9} className="text-center py-6 text-sm text-slate-500">
-                      Tidak ada data ditemukan
+                      {showListModal === "harusDipesan"
+                        ? "Tidak ada data harus dipesan bulan ini"
+                        : "Tidak ada data ditemukan"}
                     </td>
                   </tr>
                 )}

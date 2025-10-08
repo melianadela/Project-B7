@@ -64,7 +64,7 @@ function applyFilters(
     });
   }
 
-  if (machineFilter) {
+  if (machineFilter && machineFilter.toLowerCase() !== "all") {
     filteredData = filteredData.filter((item) => {
       const itemMachine = item.mesin?.trim().toLowerCase();
       const filterMachine = machineFilter.trim().toLowerCase();
