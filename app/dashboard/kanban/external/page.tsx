@@ -658,6 +658,133 @@ return;
     doc.save("Monitoring_Kanban.pdf");
   };
 
+    // 🔹 EXPORT EXCEL khusus "Harus Dipesan"
+  const exportHarusDipesanExcel = () => {
+    // Ambil data dari filter yang sama dengan tampilan tabel
+    const filtered = rows.filter((r) => {
+      const extStatus = (r.status_pemesanan || r.status || "").toString().toLowerCase();
+      const flagged =
+        extStatus.includes("siap") ||
+        extStatus.includes("siapkan") ||
+        extStatus.includes("harus") ||
+        extStatus.includes("minta");
+
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      if (!r.deadline_pemesanan)
+        return flagged && !r.PR && !r.po && !r.noPr;
+
+      const parsed = Date.parse(r.deadline_pemesanan);
+      if (!isNaN(parsed)) {
+        const d = new Date(parsed);
+        return (
+          d.getMonth() === currentMonth &&
+          d.getFullYear() === currentYear &&
+          !r.PR && !r.po && !r.noPr
+        );
+      }
+      return flagged && !r.PR && !r.po && !r.noPr;
+    });
+
+    const header = [
+      "Part",
+      "Kode Part",
+      "Kebutuhan Per Tahun",
+      "Safety Stock",
+      "Total Kebutuhan",
+      "Sisa Qty di Vendor",
+      "On Hand Inventory",
+      "Vendor",
+    ];
+
+    const data = filtered.map((r) => [
+      r.part || "-",
+      r.kodepart || "-",
+      r.kebutuhan_per_tahun || r.total_kebutuhan_per_tahun || "-",
+      r.safety_stock || r.safety_stock_statistik || "-",
+      r.total_kebutuhan || r.total_kebutuhan_per_tahun || "-",
+      r.sisa_qty_vendor || r.sisa_qty_di_vendor || "-",
+      r.on_hand_inventory || r.on_hand_invenotry || "-",
+      r.vendor || r.supplier || "-",
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Harus Dipesan");
+    XLSX.writeFile(wb, "Part_Harus_Dipesan.xlsx");
+  };
+
+  // 🔹 EXPORT PDF khusus "Harus Dipesan"
+  const exportHarusDipesanPDF = () => {
+    const doc = new jsPDF("l", "pt", "a4");
+
+    const filtered = rows.filter((r) => {
+      const extStatus = (r.status_pemesanan || r.status || "").toString().toLowerCase();
+      const flagged =
+        extStatus.includes("siap") ||
+        extStatus.includes("siapkan") ||
+        extStatus.includes("harus") ||
+        extStatus.includes("minta");
+
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      if (!r.deadline_pemesanan)
+        return flagged && !r.PR && !r.po && !r.noPr;
+
+      const parsed = Date.parse(r.deadline_pemesanan);
+      if (!isNaN(parsed)) {
+        const d = new Date(parsed);
+        return (
+          d.getMonth() === currentMonth &&
+          d.getFullYear() === currentYear &&
+          !r.PR && !r.po && !r.noPr
+        );
+      }
+      return flagged && !r.PR && !r.po && !r.noPr;
+    });
+
+    const tableColumn = [
+      "Part",
+      "Kode Part",
+      "Kebutuhan Per Tahun",
+      "Safety Stock",
+      "Total Kebutuhan",
+      "Sisa Qty di Vendor",
+      "On Hand Inventory",
+      "Vendor",
+    ];
+
+    const tableRows = filtered.map((r) => [
+      r.part || "-",
+      r.kodepart || "-",
+      r.kebutuhan_per_tahun || r.total_kebutuhan_per_tahun || "-",
+      r.safety_stock || r.safety_stock_statistik || "-",
+      r.total_kebutuhan || r.total_kebutuhan_per_tahun || "-",
+      r.sisa_qty_vendor || r.sisa_qty_di_vendor || "-",
+      r.on_hand_inventory || r.on_hand_invenotry || "-",
+      r.vendor || r.supplier || "-",
+    ]);
+
+    doc.setFontSize(12);
+    doc.text("Daftar Part Harus Dipesan Bulan Ini", 40, 30);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 50,
+      theme: "grid",
+      styles: { halign: "center", fontSize: 9 },
+      headStyles: { fillColor: [220, 53, 69], textColor: 255 },
+      columnStyles: { 0: { halign: "left" }, 7: { halign: "left" } },
+    });
+
+    doc.save("Part_Harus_Dipesan.pdf");
+  };
+
   if (loading) {
     return (
       <div className="h-72 flex items-center justify-center">
@@ -722,24 +849,25 @@ return;
 
             <div className="grid grid-cols-3 gap-4 h-[75vh]">
               {/* Not Started */}
-              <div className="bg-red-50 dark:bg-slate-800 rounded p-4">
+              <div className="bg-red-50 dark:bg-red-900/20 rounded p-4 h-fit max-h-[60vh] flex flex-col">
                 <h3 className="font-semibold mb-2">Not Started ({notStarted.length})</h3>
-                <div className="space-y-3">
+                <div className="space-y-3 h-[55vh] overflow-y-auto pr-1">
                   {notStarted.map((r, idx) => (
                     <Card key={r.__sheetRow ?? idx} className="border">
                       <CardContent className="p-3">
                         <div className="flex justify-between">
                           <div>
                             <div className="font-bold">{r.kodepart}</div>
-                            <div className="text-sm text-slate-600 dark:text-slate-400">{r.part}</div>
+                            <div className="text-sm text-slate-600 dark:text-slate-400">
+                              {r.part}
+                            </div>
                           </div>
-                          <div className="text-xs text-red-500">{r.deadline_pemesanan || "-"}</div>
+                          <div className="text-xs text-red-500">
+                            {r.deadline_pemesanan || "-"}
+                          </div>
                         </div>
                         <div className="mt-2 flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => createPR(r)}
-                          >
+                          <Button size="sm" onClick={() => createPR(r)}>
                             Buat PR
                           </Button>
                         </div>
@@ -750,16 +878,18 @@ return;
               </div>
 
               {/* In Progress */}
-              <div className="bg-yellow-50 dark:bg-yellow-900/10 rounded p-4">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded p-4 h-fit max-h-[60vh] flex flex-col">
                 <h3 className="font-semibold mb-2">In Progress ({inProgress.length})</h3>
-                <div className="space-y-3">
+                <div className="space-y-3 h-[55vh] overflow-y-auto pr-1">
                   {inProgress.map((r, idx) => (
                     <Card key={r.__sheetRow ?? idx} className="border">
                       <CardContent className="p-3 space-y-2">
                         <div className="flex justify-between">
                           <div>
                             <div className="font-bold">PR: {r.noPr || r.PR || "-"}</div>
-                            <div className="text-sm text-slate-600 dark:text-slate-400">{r.part}</div>
+                            <div className="text-sm text-slate-600 dark:text-slate-400">
+                              {r.part}
+                            </div>
                           </div>
                           <div className="text-xs">{r.status}</div>
                         </div>
@@ -770,7 +900,13 @@ return;
                             className="bg-blue-600 text-white"
                             onClick={() => {
                               setRowPO(r);
-                              setFormPO({ noPO: "", tanggalPO: "", leadtime: "", harga: "",eta:"" });
+                              setFormPO({
+                                noPO: "",
+                                tanggalPO: "",
+                                leadtime: "",
+                                harga: "",
+                                eta: "",
+                              });
                               setShowPOForm(true);
                             }}
                           >
@@ -798,19 +934,23 @@ return;
               </div>
 
               {/* Completed */}
-              <div className="bg-green-50 dark:bg-green-900/10 rounded p-4">
+              <div className="bg-green-50 dark:bg-green-900/20 rounded p-4 h-fit max-h-[60vh] flex flex-col">
                 <h3 className="font-semibold mb-2">Completed ({completed.length})</h3>
-                <div className="space-y-3">
+                <div className="space-y-3 h-[55vh] overflow-y-auto pr-1">
                   {completed.map((r, idx) => (
                     <Card key={r.__sheetRow ?? idx} className="border">
                       <CardContent className="p-3">
                         <div className="flex justify-between">
                           <div>
                             <div className="font-bold">{r.kodepart}</div>
-                            <div className="text-sm text-slate-600 dark:text-slate-400">{r.part}</div>
+                            <div className="text-sm text-slate-600 dark:text-slate-400">
+                              {r.part}
+                            </div>
                           </div>
                           <div className="text-xs text-green-700">
-                            {r.status?.toLowerCase().includes("diterima") ? "Sudah Diterima" : "Sudah Diterima"}
+                            {r.status?.toLowerCase().includes("diterima")
+                              ? "Sudah Diterima"
+                              : "Sudah Diterima"}
                           </div>
                         </div>
                       </CardContent>
@@ -833,13 +973,13 @@ return;
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-100 dark:bg-slate-800">
                   <tr>
-                    <th className="px-4 py-2 text-left">Kode Part</th>
-                    <th className="px-4 py-2 text-left">Part</th>
-                    <th className="px-4 py-2 text-left">Deadline</th>
-                    <th className="px-4 py-2 text-left">Supplier</th>
-                    <th className="px-4 py-2 text-left">Status</th>
-                    <th className="px-4 py-2 text-left">PR</th>
-                    <th className="px-4 py-2 text-left">Aksi</th>
+                    <th className="px-4 py-2 text-center">Kode Part</th>
+                    <th className="px-4 py-2 text-center">Part</th>
+                    <th className="px-4 py-2 text-center">Deadline</th>
+                    <th className="px-4 py-2 text-center">Supplier</th>
+                    <th className="px-4 py-2 text-center">Status</th>
+                    <th className="px-4 py-2 text-center">PR</th>
+                    <th className="px-4 py-2 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -901,14 +1041,14 @@ return;
               <table className="min-w-full text-sm border">
                 <thead className="bg-slate-100 dark:bg-slate-800">
                   <tr>
-                    <th className="px-3 py-2 text-left">Tipe</th>
-                    <th className="px-3 py-2 text-left">Tanggal</th>
-                    <th className="px-3 py-2 text-left">PR</th>
-                    <th className="px-3 py-2 text-left">PO</th>
-                    <th className="px-3 py-2 text-left">Kode Part</th>
-                    <th className="px-3 py-2 text-left">Part</th>
-                    <th className="px-3 py-2 text-left">Vendor</th>
-                    <th className="px-3 py-2 text-left">Status</th>
+                    <th className="px-3 py-2 text-center">Tipe</th>
+                    <th className="px-3 py-2 text-center">Tanggal</th>
+                    <th className="px-3 py-2 text-center">PR</th>
+                    <th className="px-3 py-2 text-center">PO</th>
+                    <th className="px-3 py-2 text-center">Kode Part</th>
+                    <th className="px-3 py-2 text-center">Part</th>
+                    <th className="px-3 py-2 text-center">Vendor</th>
+                    <th className="px-3 py-2 text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -958,7 +1098,7 @@ return;
                 className="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700"
                 onClick={() => setTab("board")}
               >
-                ← Kembali
+                Card Kanban
               </Button>
             </div>
           </div>
@@ -1309,18 +1449,37 @@ return;
                   : "Part Harus Dipesan Bulan Ini"}
               </h2>
               <div className="flex gap-2">
-                <Button 
-                  onClick={() => exportExcel()} 
-                  className="bg-emerald-600 text-white flex items-center gap-2"
-                >
-                  <FileText size={16}/> Export Excel
-                </Button>
-                <Button 
-                  onClick={() => exportPDF()} 
-                  className="bg-red-600 text-white flex items-center gap-2"
-                >
-                  <Printer size={16}/> Export PDF
-                </Button>
+                {showListModal === "total" ? (
+                  <>
+                    <Button
+                      onClick={() => exportExcel()}
+                      className="bg-emerald-600 text-white flex items-center gap-2"
+                    >
+                      <FileText size={16} /> Export Excel
+                    </Button>
+                    <Button
+                      onClick={() => exportPDF()}
+                      className="bg-red-600 text-white flex items-center gap-2"
+                    >
+                      <Printer size={16} /> Export PDF
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => exportHarusDipesanExcel()}
+                      className="bg-emerald-600 text-white flex items-center gap-2"
+                    >
+                      <FileText size={16} /> Export Excel
+                    </Button>
+                    <Button
+                      onClick={() => exportHarusDipesanPDF()}
+                      className="bg-red-600 text-white flex items-center gap-2"
+                    >
+                      <Printer size={16} /> Export PDF
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1365,15 +1524,15 @@ return;
             <table className="min-w-full text-sm border">
               <thead className="bg-slate-100 dark:bg-gray-800 dark:text-gray-100">
               <tr className="border-b border-slate-200 dark:border-gray-700">
-                  <th className="px-3 py-2 text-left">Part</th>
-                  <th className="px-3 py-2 text-left">Kode Part</th>
-                  <th className="px-3 py-2 text-left">Kebutuhan Per Tahun</th>
-                  <th className="px-3 py-2 text-left">Safety Stock</th>
-                  <th className="px-3 py-2 text-left">Total Kebutuhan</th>
-                  <th className="px-3 py-2 text-left">Sisa Qty di Vendor</th>
-                  <th className="px-3 py-2 text-left">On Hand Inventory</th>
-                  <th className="px-3 py-2 text-left">Vendor</th>
-                  <th className="px-3 py-2 text-left">Aksi</th>
+                  <th className="px-3 py-2 text-center">Part</th>
+                  <th className="px-3 py-2 text-center">Kode Part</th>
+                  <th className="px-3 py-2 text-center">Kebutuhan Per Tahun</th>
+                  <th className="px-3 py-2 text-center">Safety Stock</th>
+                  <th className="px-3 py-2 text-center">Total Kebutuhan</th>
+                  <th className="px-3 py-2 text-center">Sisa Qty di Vendor</th>
+                  <th className="px-3 py-2 text-center">On Hand Inventory</th>
+                  <th className="px-3 py-2 text-center">Vendor</th>
+                  <th className="px-3 py-2 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -1415,9 +1574,9 @@ return;
                     >
                       <td className="px-3 py-2">{r.part}</td>
                       <td className="px-3 py-2">{r.kodepart}</td>
-                      <td className="px-3 py-2">{r.kebutuhan_per_tahun || "-"}</td>
-                      <td className="px-3 py-2">{r.safety_stock_statistik || "-"}</td>
-                      <td className="px-3 py-2">{r.total_kebutuhan_per_tahun || "-"}</td>
+                      <td className="px-3 py-2 text-center">{r.kebutuhan_per_tahun || "-"}</td>
+                      <td className="px-3 py-2 text-center">{r.safety_stock_statistik || "-"}</td>
+                      <td className="px-3 py-2 ">{r.total_kebutuhan_per_tahun || "-"}</td>
                       <td className="px-3 py-2">{r.sisa_qty_di_vendor || "-"}</td>
                       <td className="px-3 py-2">{r.on_hand_invenotry || "-"}</td>
                       <td className="px-3 py-2">{r.vendor}</td>
@@ -1486,7 +1645,7 @@ return;
                 className="flex items-center gap-2"
                 onClick={() => setShowListModal(null)}
               >
-                ❌ Tutup
+                ❌ Close
               </Button>
             </div>
           </div>

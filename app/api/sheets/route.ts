@@ -65,24 +65,18 @@ function applyFilters(
   }
 
   if (machineFilter && machineFilter.toLowerCase() !== "all") {
-    filteredData = filteredData.filter((item) => {
-      const itemMachine = item.mesin?.trim().toLowerCase();
-      const filterMachine = machineFilter.trim().toLowerCase();
+  filteredData = filteredData.filter((item) => {
+    const itemMachine = (item.mesin || "").toLowerCase().replace(/\s+/g, " ").trim();
+    const filterMachine = machineFilter.toLowerCase().replace(/\s+/g, " ").trim();
 
-      if (itemMachine === filterMachine) return true;
+    // exact match
+    if (itemMachine === filterMachine) return true;
 
-      if (/^\d+$/.test(filterMachine)) {
-        const escapedFilter = filterMachine.replace(
-          /[.*+?^${}()|[\]\\]/g,
-          "\\$&"
-        );
-        const regex = new RegExp(`\\b${escapedFilter}\\b`, "i");
-        return regex.test(itemMachine);
-      }
+    // partial match (misal "super mixer" cocok ke "super mixer 1")
+    return itemMachine.includes(filterMachine);
+  });
+}
 
-      return itemMachine?.includes(filterMachine);
-    });
-  }
 
   return filteredData;
 }

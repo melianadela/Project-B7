@@ -37,16 +37,34 @@ interface Distribution {
 
 export default function MachineDashboardPage() {
   const params = useParams<{ worksheet: string; id: string }>();
-  const worksheetName = (params?.worksheet || "LIFETIME").toUpperCase();
-  const machineName =
-    params?.id === "_" || !params?.id
-      ? decodeURIComponent(worksheetName)
-      : `${decodeURIComponent(worksheetName)} ${params.id.toUpperCase()}`;
 
-  // ambil data via hook (pastikan hook useSheetData mengembalikan { data })
+  const worksheetName = decodeURIComponent(params?.worksheet || "LIFETIME")
+    .replace(/-/g, " ")
+    .toUpperCase();
+
+  let machineName = "ALL";
+
+  if (params?.id && params.id !== "_") {
+    const machinePart = decodeURIComponent(params.id)
+      .replace(/-/g, " ")
+      .toUpperCase();
+
+    // kalau worksheet-nya MIXING TANK, maka jangan gabungin
+    if (worksheetName === "MIXING TANK" || worksheetName === "PURIFIED WATER (PW)" || worksheetName === "AHU") {
+      machineName = machinePart;
+    } else {
+      machineName = `${worksheetName} ${machinePart}`;
+    }
+  } else {
+    machineName = worksheetName;
+  }
+
+  console.log("worksheet:", worksheetName);
+  console.log("machine:", machineName);
+
   const { data: allSpareparts } = useSheetData({
     worksheet: worksheetName,
-    machine: machineName.split(" ")[1] ?? "ALL",
+    machine: machineName,
   });
 
   const [sparepartDistribution, setSparepartDistribution] = useState<Distribution[]>([]);
@@ -56,29 +74,52 @@ export default function MachineDashboardPage() {
   const [machineSpareparts, setMachineSpareparts] = useState<Sparepart[]>([]);
 
   useEffect(() => {
-    if (!allSpareparts) return;
-    const spareparts = allSpareparts as Sparepart[];
+  if (!allSpareparts) return;
+  const spareparts = allSpareparts as Sparepart[];
 
-    const overdue = spareparts.filter((sp) => sp.status === "Melewati Jadwal Penggantian");
-    const expiring = spareparts.filter((sp) => sp.status === "Segera Jadwalkan Penggantian");
-    const ok = spareparts.filter(
-      (sp) =>
-        sp.status !== "Segera Jadwalkan Penggantian" &&
-        sp.status !== "Melewati Jadwal Penggantian" &&
-        sp.status !== ""
+  console.log("🔍 Data Spareparts:", spareparts.map(sp => sp.status));
+
+  const overdue = spareparts.filter((sp) => {
+    const s = sp.status?.toLowerCase() || "";
+    return (
+      s.includes("melewati jadwal penggantian") ||
+      s.includes("melewati jadwal pelumasan") ||
+      s.includes("melewati jadwal pengecekan")
     );
+  });
 
-    setOverdueSpareparts(overdue);
-    setNearEndOfLife(expiring);
-    setOkSpareparts(ok);
-    setMachineSpareparts(spareparts);
+  const expiring = spareparts.filter((sp) => {
+    const s = sp.status?.toLowerCase() || "";
+    return (
+      s.includes("segera jadwalkan penggantian") ||
+      s.includes("segera jadwalkan pelumasan") ||
+      s.includes("segera jadwalkan pengecekan")
+    );
+  });
 
-    setSparepartDistribution([
-      { name: "Sparepart yang akan habis umur", value: expiring.length },
-      { name: "Sparepart overdue", value: overdue.length },
-      { name: "Sparepart OK", value: ok.length },
-    ]);
-  }, [allSpareparts]);
+  const ok = spareparts.filter((sp) => {
+    const s = sp.status?.toLowerCase() || "";
+    return (
+      s !== "" &&
+      !s.includes("segera jadwalkan") &&
+      !s.includes("melewati jadwal")
+    );
+  });
+
+  console.log("Overdue:", overdue.length, "Expiring:", expiring.length, "OK:", ok.length);
+
+  setOverdueSpareparts(overdue);
+  setNearEndOfLife(expiring);
+  setOkSpareparts(ok);
+  setMachineSpareparts(spareparts);
+
+  setSparepartDistribution([
+    { name: "Sparepart yang akan habis umur", value: expiring.length },
+    { name: "Sparepart overdue", value: overdue.length },
+    { name: "Sparepart OK", value: ok.length },
+  ]);
+}, [allSpareparts]);
+
 
   return (
     <div className="flex flex-col gap-4">
