@@ -6,16 +6,9 @@ import { useEffect, useState } from "react";
 import {
   MachineStatsCards,
   PieChartDistribution,
-  OverdueTable,
-  SparepartTable,
 } from "@/components/machine-details";
 import { useSheetData } from "@/hooks/use-sheet-data";
 
-/**
- * Page: Machine Dashboard
- * - memanggil MachineStatsCards dengan handler onXClick
- * - menampilkan modal saat card diklik (modal di-handle di machine-details.tsx sekarang via prop)
- */
 
 interface Sparepart {
   mesin: string;

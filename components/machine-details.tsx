@@ -191,15 +191,46 @@ export function MachineStatsCards({
         setLoading(true);
         const response = await fetch(`/api/sheets?worksheet=${worksheet}`);
         const result = await response.json();
+
         if (result.success) {
           let data = result.data as Sparepart[];
+
+          // 🔧 Filter mesin yang sesuai
           if (machine && machine !== "ALL") {
-            data = data.filter((item) => (item.mesin || "").toUpperCase() === (machine || "").toUpperCase());
+            const worksheetUpper = worksheet.toUpperCase().trim();
+            const machineUpper = machine.toUpperCase().trim();
+
+            data = data.filter((item) => {
+              const itemMachine = (item.mesin || "").toUpperCase().trim();
+
+              // Jika worksheet & machine berbeda (misal MIXING TANK - SILVERSON)
+              if (worksheetUpper !== machineUpper) {
+                return itemMachine === machineUpper;
+              }
+
+              // Jika worksheet & machine sama dasar (misal SUPER MIXER & SUPER MIXER 1)
+              return (
+                itemMachine === machineUpper ||
+                itemMachine === `${machineUpper}` // exact match
+              );
+            });
           }
+
+          // Hitung statistik
           const total = data.length;
-          const expiringSoon = data.filter((item) => item.status === "Segera Jadwalkan Penggantian").length;
-          const overdue = data.filter((item) => item.status === "Melewati Jadwal Penggantian").length;
-          const ok = data.filter((item) => item.status && item.status !== "Segera Jadwalkan Penggantian" && item.status !== "Melewati Jadwal Penggantian").length;
+          const expiringSoon = data.filter((item) =>
+            item.status?.toLowerCase().includes("segera jadwalkan")
+          ).length;
+          const overdue = data.filter((item) =>
+            item.status?.toLowerCase().includes("melewati jadwal")
+          ).length;
+          const ok = data.filter(
+            (item) =>
+              item.status &&
+              !item.status.toLowerCase().includes("segera jadwalkan") &&
+              !item.status.toLowerCase().includes("melewati jadwal")
+          ).length;
+
           setStats({ total, expiringSoon, overdue, ok });
         }
       } catch (err) {
@@ -208,16 +239,20 @@ export function MachineStatsCards({
         setLoading(false);
       }
     }
+
     fetchData();
   }, [worksheet, machine]);
 
-  // helper show modal with data; also call optional external callback if provided
-  const showModalWith = (title: string, d: Sparepart[], externalCb?: ((showWith: (data: Sparepart[]) => void) => void)) => {
+  // Modal handler
+  const showModalWith = (
+    title: string,
+    d: Sparepart[],
+    externalCb?: (showWith: (data: Sparepart[]) => void) => void
+  ) => {
     setModalTitle(title);
     setModalData(d);
     setModalOpen(true);
     if (externalCb) {
-      // allow parent to override data if needed
       externalCb((override) => {
         setModalData(override);
       });
@@ -230,16 +265,19 @@ export function MachineStatsCards({
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
             <CardHeader className="flex items-center justify-between pb-2">
-              <CardTitle><Skeleton className="h-4 w-40" /></CardTitle>
+              <CardTitle>
+                <Skeleton className="h-4 w-40" />
+              </CardTitle>
             </CardHeader>
-            <CardContent><Skeleton className="h-8 w-16" /></CardContent>
+            <CardContent>
+              <Skeleton className="h-8 w-16" />
+            </CardContent>
           </Card>
         ))}
       </div>
     );
   }
 
-  // card render: clickable area is button inside (tidak langsung pada Card untuk menghindari typing issues)
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -305,7 +343,6 @@ export function MachineStatsCards({
         </Card>
       </div>
 
-      {/* modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

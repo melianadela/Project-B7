@@ -126,7 +126,7 @@ const data = {
             title: "SUPER MIXER",
             items: [
               { title: "SUPER MIXER", url: "/dashboard/lifetime/super-mixer/_" },
-              { title: "SUPER MIXER 1", url: "/dashboard/lifetime/super mixer/1" },
+              { title: "SUPER MIXER 1", url: "/dashboard/lifetime/super-mixer/1" },
             ],
           },
           {

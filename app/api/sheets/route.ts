@@ -52,31 +52,35 @@ function processSheetData(rows: any[][]) {
 function applyFilters(
   data: any[],
   machineFilter?: string,
-  statusFilter?: string
+  statusFilter?: string,
+  worksheetName?: string // kirimkan dari parent
 ) {
   let filteredData = data;
 
   if (statusFilter) {
     filteredData = filteredData.filter((item) => {
-      const itemStatus = item.status?.trim().toLowerCase();
-      const filterStatus = statusFilter.trim().toLowerCase();
+      const itemStatus = (item.status || "").toLowerCase().trim();
+      const filterStatus = statusFilter.toLowerCase().trim();
       return itemStatus === filterStatus;
     });
   }
 
   if (machineFilter && machineFilter.toLowerCase() !== "all") {
-  filteredData = filteredData.filter((item) => {
-    const itemMachine = (item.mesin || "").toLowerCase().replace(/\s+/g, " ").trim();
-    const filterMachine = machineFilter.toLowerCase().replace(/\s+/g, " ").trim();
+    filteredData = filteredData.filter((item) => {
+      const itemMachine = (item.mesin || "").toLowerCase().trim();
+      const filterMachine = machineFilter.toLowerCase().trim();
+      const worksheet = (worksheetName || "").toLowerCase().trim();
 
-    // exact match
-    if (itemMachine === filterMachine) return true;
+      // case 1: worksheet dan machine beda (contoh: mixing tank → silverson)
+      if (itemMachine === filterMachine) return true;
 
-    // partial match (misal "super mixer" cocok ke "super mixer 1")
-    return itemMachine.includes(filterMachine);
-  });
-}
+      // case 2: worksheet dan machine mirip (contoh: super mixer → super mixer 1)
+      // hanya ambil yang persis sama, bukan yang startsWith
+      if (itemMachine === filterMachine && worksheet.includes(filterMachine)) return true;
 
+      return false;
+    });
+  }
 
   return filteredData;
 }
