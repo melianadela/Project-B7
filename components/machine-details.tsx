@@ -85,6 +85,7 @@ interface PieChartDistributionProps {
 interface SparepartTableProps {
   data: Sparepart[];
   showMachine?: boolean;
+  worksheet: string;
 }
 
 /* --- Helper UI Labels --- */
@@ -348,7 +349,7 @@ export function MachineStatsCards({
         onClose={() => setModalOpen(false)}
         title={modalTitle}
       >
-        <SparepartTable data={modalData} showMachine={true} />
+        <SparepartTable data={modalData} showMachine={true} worksheet={worksheet} />
       </Modal>
     </>
   );
@@ -466,13 +467,49 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
 }
 
 /* --- SparepartTable (with export PDF) --- */
-export function SparepartTable({ data, showMachine = false }: SparepartTableProps) {
+export function SparepartTable({ data, showMachine = false, worksheet }: SparepartTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [responsibilityFilter, setResponsibilityFilter] = useState("all");
+  const [selectedSparepart, setSelectedSparepart] = useState<Sparepart | null>(null);
+  const [tanggalPelaksanaan, setTanggalPelaksanaan] = useState("");
+  const [showTanggalModal, setShowTanggalModal] = useState(false);
   const itemsPerPage = 10;
+
+async function handleSubmitTanggal() {
+  if (!selectedSparepart || !tanggalPelaksanaan) {
+    alert("Mohon isi tanggal pelaksanaan.");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+  `/api/sheets?worksheet=${encodeURIComponent(worksheet)}&kodepart=${selectedSparepart.kodepart}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tanggalPenggantianTerakhir: tanggalPelaksanaan,
+        }),
+      }
+    );
+
+    const result = await res.json();
+    if (result.success) {
+      alert(`✅ Data ${selectedSparepart.kodepart} berhasil diperbarui`);
+      setShowTanggalModal(false);
+      window.location.reload();
+    } else {
+      alert(`❌ Gagal memperbarui: ${result.error || "Unknown error"}`);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Terjadi kesalahan saat mengirim data.");
+  }
+}
+
 
   const filteredData = data.filter((item) => {
     const matchSearch = (item.part || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -553,14 +590,15 @@ export function SparepartTable({ data, showMachine = false }: SparepartTableProp
           <TableHeader>
             <TableRow>
               {showMachine && <TableHead>Machine</TableHead>}
-              <TableHead>Code</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Lifetime</TableHead>
-              <TableHead>Last Replace</TableHead>
-              <TableHead>Next Replace</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Responsibility</TableHead>
+              <TableHead className="text-center">Code</TableHead>
+              <TableHead className="text-center">Name</TableHead>
+              <TableHead className="text-center">Category</TableHead>
+              <TableHead className="text-center">Lifetime</TableHead>
+              <TableHead className="text-center">Last Replace</TableHead>
+              <TableHead className="text-center">Next Replace</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="text-center">Responsibility</TableHead>
+              <TableHead className="text-center">Action</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -570,12 +608,26 @@ export function SparepartTable({ data, showMachine = false }: SparepartTableProp
                 {showMachine && <TableCell>{sp.mesin}</TableCell>}
                 <TableCell>{sp.kodepart}</TableCell>
                 <TableCell>{sp.part}</TableCell>
-                <TableCell><CategoryLabel category={sp.category} /></TableCell>
-                <TableCell>{sp["lifetime(bulan)"]}</TableCell>
-                <TableCell>{sp.penggantianterakhir}</TableCell>
-                <TableCell>{sp.penggantianselanjutnya}</TableCell>
+                <TableCell className="text-center"><CategoryLabel category={sp.category} /></TableCell>
+                <TableCell className="text-center">{sp["lifetime(bulan)"]}</TableCell>
+                <TableCell className="text-center">{sp.penggantianterakhir}</TableCell>
+                <TableCell className="text-center">{sp.penggantianselanjutnya}</TableCell>
                 <TableCell><StatusLabel status={sp.status} /></TableCell>
-                <TableCell><ResponsibilityLabel responsibility={sp.tanggungjawab} /></TableCell>
+                <TableCell className="text-center"><ResponsibilityLabel responsibility={sp.tanggungjawab} /></TableCell>
+                <TableCell className="flex justify-center items-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                    onClick={() => {
+                      setSelectedSparepart(sp);
+                      setTanggalPelaksanaan("");
+                      setShowTanggalModal(true);
+                    }}
+                  >
+                    Sudah Dilakukan
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -586,6 +638,29 @@ export function SparepartTable({ data, showMachine = false }: SparepartTableProp
             <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Previous</Button>
             <span className="text-sm">Page {currentPage} of {totalPages} ({data.length} items)</span>
             <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Next</Button>
+          </div>
+        )}
+        {showTanggalModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg w-[400px]">
+              <h3 className="text-lg font-semibold mb-4">
+                Tanggal Pelaksanaan - {selectedSparepart?.kodepart}
+              </h3>
+              <input
+                type="date"
+                value={tanggalPelaksanaan}
+                onChange={(e) => setTanggalPelaksanaan(e.target.value)}
+                className="w-full border rounded-md px-3 py-2 mb-4"
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowTanggalModal(false)}>
+                  Batal
+                </Button>
+                <Button onClick={handleSubmitTanggal} className="bg-blue-600 text-white hover:bg-blue-700">
+                  Simpan
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

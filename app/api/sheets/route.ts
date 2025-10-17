@@ -173,116 +173,104 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const worksheetName = searchParams.get("worksheet") || "Sheet1";
+    const worksheetNameRaw = searchParams.get("worksheet") || "Sheet1";
     const kodepart = searchParams.get("kodepart");
+    const body = await request.json();
+    const tanggalBaru = body.tanggalPenggantianTerakhir;
 
-    console.log("kodepart:", kodepart);
-
-    // Validasi kodepart
-    if (!kodepart || kodepart.trim() === "") {
+    if (!kodepart || !tanggalBaru) {
       return NextResponse.json(
-        { success: false, error: "kodepart parameter is required" },
+        { success: false, error: "Kodepart dan tanggal wajib diisi" },
         { status: 400 }
       );
     }
 
+    // 🔎 Bersihkan nama worksheet dari karakter tak terlihat
+    const cleanWorksheet = worksheetNameRaw.replace(/\u00A0/g, " ").trim();
+
+    // 🧠 Pastikan format range valid
+    const rangeGet = `'${cleanWorksheet}'!A:Z`;
+    console.log("🧾 Worksheet yang dikirim:", JSON.stringify(cleanWorksheet));
+    console.log("📏 Range get:", rangeGet);
+
     const sheets = createSheetsClient();
 
-    // Verify worksheet exists
-    const worksheetExists = await verifyWorksheet(sheets, process.env.sheet_id!, worksheetName);
-    if (!worksheetExists) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: `Worksheet '${worksheetName}' tidak ditemukan` 
-        },
-        { status: 404 }
-      );
+    // 🧪 Tes dulu apakah Google Sheets bisa akses worksheet ini
+    try {
+      await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.sheet_id!,
+        range: rangeGet,
+      });
+    } catch (e: any) {
+      console.error("❌ TEST FAILED GET:", e.message);
+      throw new Error(`Tidak bisa akses range '${rangeGet}'. Cek nama sheet atau karakter tersembunyi.`);
     }
 
-    const response = await sheets.spreadsheets.values.get({
+    // Kalau GET berhasil, baru lanjut ambil data
+    const resp = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.sheet_id!,
-      range: `${worksheetName}!A:Z`,
+      range: rangeGet,
     });
 
-    const rows = response.data.values || [];
-    if (rows.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "Sheet kosong" },
-        { status: 404 }
-      );
-    }
+    const rows = resp.data.values || [];
 
-    // Cari kolom kodepart (asumsi kolom A, bisa disesuaikan)
-    const headerRow = rows[1];
-    const kodepartColumnIndex = headerRow.findIndex((header) =>
-      header?.toLowerCase().trim().includes("kode")
+    const headerRowIndex = rows.findIndex(
+      (r) =>
+        r.some((cell) =>
+          ["kode", "penggantian", "mesin"].some((k) =>
+            (cell || "").toLowerCase().includes(k)
+          )
+        )
+    );
+    if (headerRowIndex === -1)
+      throw new Error("Header tidak ditemukan dalam sheet");
+
+    const headerRow = rows[headerRowIndex];
+    const kodepartIdx = headerRow.findIndex((h) =>
+      (h || "").toLowerCase().includes("kode")
+    );
+    const penggantianTerakhirIdx = headerRow.findIndex((h) =>
+      (h || "").toLowerCase().includes("penggantian terakhir")
     );
 
-    if (kodepartColumnIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: "Kolom kodepart tidak ditemukan" },
-        { status: 404 }
-      );
-    }
+    if (kodepartIdx === -1 || penggantianTerakhirIdx === -1)
+      throw new Error("Kolom 'Kode' atau 'Penggantian Terakhir' tidak ditemukan");
 
-    // Cari baris dengan kodepart yang sesuai (mulai dari baris 2, index 1)
-    const targetRows: number[] = [];
-    for (let i = 1; i < rows.length; i++) {
-      const rowKodepart = rows[i][kodepartColumnIndex]?.toString().trim();
-      if (rowKodepart === kodepart) {
-        targetRows.push(i + 1); // +1 karena sheet dimulai dari 1
-      }
-    }
+    const targetRow = rows.findIndex(
+      (r) => (r[kodepartIdx] || "").trim() === kodepart.trim()
+    );
 
-    if (targetRows.length === 0) {
+    if (targetRow === -1) {
       return NextResponse.json(
         { success: false, error: `Kodepart '${kodepart}' tidak ditemukan` },
         { status: 404 }
       );
     }
 
-    // Siapkan batch update untuk kolom K, L, M
-    const batchUpdateRequests = [];
+    const targetCell = `'${cleanWorksheet}'!${String.fromCharCode(
+      65 + penggantianTerakhirIdx
+    )}${targetRow + 1}`;
+    console.log("✅ Target cell:", targetCell);
 
-    for (const rowNumber of targetRows) {
-      // Kolom K - kosongkan
-      batchUpdateRequests.push({
-        range: `${worksheetName}!K${rowNumber}`,
-        values: [[""]],
-      });
-
-      // Kolom L - isi dengan "✅ Cukup"
-      batchUpdateRequests.push({
-        range: `${worksheetName}!L${rowNumber}`,
-        values: [["✅ Cukup"]],
-      });
-
-      // Kolom M - kosongkan
-      batchUpdateRequests.push({
-        range: `${worksheetName}!M${rowNumber}`,
-        values: [[""]],
-      });
-    }
-
-    // Execute batch update
-    const batchResponse = await sheets.spreadsheets.values.batchUpdate({
+    await sheets.spreadsheets.values.update({
       spreadsheetId: process.env.sheet_id!,
-      requestBody: {
-        valueInputOption: "USER_ENTERED",
-        data: batchUpdateRequests,
-      },
+      range: targetCell,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { values: [[tanggalBaru]] },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: `${kodepart} berhasil di update`,
-    });
-  } catch (error) {
-    console.error("Error updating columns:", error);
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error("PATCH ERROR:", err);
     return NextResponse.json(
-      { success: false, error: "Gagal mengupdate kolom" },
+      {
+        success: false,
+        error:
+          err.message || "Gagal memperbarui tanggal penggantian terakhir",
+      },
       { status: 500 }
     );
   }
 }
+
+
