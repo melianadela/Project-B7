@@ -45,6 +45,19 @@ const LifetimeOverviewPage: React.FC = () => {
   const jihcheng = useSheetData({ worksheet: "JIHCHENG", machine: "JIHCHENG" });
   const cosmec = useSheetData({ worksheet: "COSMEC", machine: "COSMEC" });
   const fbd = useSheetData({ worksheet: "FBD", machine: "FBD" });
+  const temach = useSheetData({ worksheet: "TEMACH", machine: "TEMACH" });
+  const supermixer = useSheetData({ worksheet: "SUPER MIXER", machine: "SUPER MIXER" });
+  const mixing = useSheetData({ worksheet: "MIXING TANK", machine: "MIXING TANK" });
+  const storage = useSheetData({ worksheet: "STORAGE TANK", machine: "STORAGE TANK" });
+  const aquademin = useSheetData({ worksheet: "AQUADEMIN", machine: "AQUADEMIN" });
+  const deminpanas = useSheetData({ worksheet: "DEMIN PANAS", machine: "DEMIN PANAS" });
+  const boiler = useSheetData({ worksheet: "BOILER", machine: "BOILER" });
+  const genset = useSheetData({ worksheet: "GENSET", machine: "GENSET" });
+  const chiller = useSheetData({ worksheet: "CHILLER", machine: "CHILLER" });
+  const kompressor = useSheetData({ worksheet: "KOMPRESSOR", machine: "KOMPRESSOR" });
+  const pw = useSheetData({ worksheet: "PURIFIED WATER (PW)", machine: "PURIFIED WATER (PW)" });
+  const ahu = useSheetData({ worksheet: "AHU", machine: "AHU" });
+
 
   const [allSpareparts, setAllSpareparts] = useState<Sparepart[]>([]);
   const [distribution, setDistribution] = useState<Distribution[]>([]);
@@ -62,40 +75,87 @@ const LifetimeOverviewPage: React.FC = () => {
   };
 
   useEffect(() => {
-    // gabung semua data
-    const combined: Sparepart[] = [
-      ...(ilapak.data || []).map((d: any) => ({ ...d, mesin: "ILAPAK" })),
-      ...(sig.data || []).map((d: any) => ({ ...d, mesin: "SIG" })),
-      ...(unifill.data || []).map((d: any) => ({ ...d, mesin: "UNIFILL" })),
-      ...(chimei.data || []).map((d: any) => ({ ...d, mesin: "CHIMEI" })),
-      ...(jinsung.data || []).map((d: any) => ({ ...d, mesin: "JINSUNG" })),
-      ...(jihcheng.data || []).map((d: any) => ({ ...d, mesin: "JIHCHENG" })),
-      ...(cosmec.data || []).map((d: any) => ({ ...d, mesin: "COSMEC" })),
-      ...(fbd.data || []).map((d: any) => ({ ...d, mesin: "FBD" })),
+    const sheetGroups = [
+      { data: ilapak.data, mesin: "ILAPAK" },
+      { data: sig.data, mesin: "SIG" },
+      { data: unifill.data, mesin: "UNIFILL" },
+      { data: chimei.data, mesin: "CHIMEI" },
+      { data: jinsung.data, mesin: "JINSUNG" },
+      { data: jihcheng.data, mesin: "JIHCHENG" },
+      { data: cosmec.data, mesin: "COSMEC" },
+      { data: fbd.data, mesin: "FBD" },
+      { data: temach.data, mesin: "TEMACH" },
+      { data: supermixer.data, mesin: "SUPER MIXER" },
+      { data: mixing.data, mesin: "MIXING TANK" },
+      { data: storage.data, mesin: "STORAGE TANK" },
+      { data: aquademin.data, mesin: "AQUADEMIN" },
+      { data: deminpanas.data, mesin: "DEMIN PANAS" },
+      { data: boiler.data, mesin: "BOILER" },
+      { data: genset.data, mesin: "GENSET" },
+      { data: chiller.data, mesin: "CHILLER" },
+      { data: kompressor.data, mesin: "KOMPRESSOR" },
+      { data: pw.data, mesin: "PURIFIED WATER (PW)" },
+      { data: ahu.data, mesin: "AHU" },
     ];
 
-    if (combined.length > 0) {
-      setAllSpareparts(combined);
+    // Tunggu sampai semua data selesai diambil
+    const allLoaded = sheetGroups.every((g) => Array.isArray(g.data));
+    if (!allLoaded) return;
 
-      const overdue = combined.filter((sp) => sp.status === "Melewati Jadwal Penggantian");
-      const nearEndOfLife = combined.filter((sp) => sp.status === "Segera Jadwalkan Penggantian");
-      const ok = combined.filter(
-        (sp) =>
-          sp.status !== "Segera Jadwalkan Penggantian" &&
-          sp.status !== "Melewati Jadwal Penggantian" &&
-          sp.status !== ""
-      );
+    // Gabungkan semua sheet
+    const combined: Sparepart[] = sheetGroups.flatMap(({ data, mesin }) =>
+      (data || []).map((d: any) => ({
+        ...d,
+        mesin,
+        // 🧠 handle kalau ada submachine (contoh: MIXING TANK → SILVERSON, TETRA)
+        mesinfull:
+          mesin === "MIXING TANK"
+            ? d.mesin || "SILVERSON/TETRA"
+            : d.mesin || mesin,
+      }))
+    );
 
-      setDistribution([
-        { key: "overdue", name: "Sparepart Overdue", value: overdue.length, color: "from-red-500 to-red-700" },
-        { key: "nearend", name: "Sparepart Akan Habis Umur", value: nearEndOfLife.length, color: "from-yellow-400 to-amber-500" },
-        { key: "ok", name: "Sparepart OK", value: ok.length, color: "from-green-500 to-emerald-600" },
-      ]);
+    // Simpan semua ke state
+    setAllSpareparts(combined);
 
-      // default tampilkan all
-      setFilteredData(combined);
-    }
-  }, [ilapak.data, sig.data, unifill.data, chimei.data, jinsung.data, jihcheng.data, cosmec.data, fbd.data]);
+    const overdue = combined.filter((sp) => sp.status === "Melewati Jadwal Penggantian");
+    const nearEndOfLife = combined.filter((sp) => sp.status === "Segera Jadwalkan Penggantian");
+    const ok = combined.filter(
+      (sp) =>
+        sp.status !== "Segera Jadwalkan Penggantian" &&
+        sp.status !== "Melewati Jadwal Penggantian" &&
+        sp.status !== ""
+    );
+
+    setDistribution([
+      { key: "overdue", name: "Sparepart Overdue", value: overdue.length, color: "from-red-500 to-red-700" },
+      { key: "nearend", name: "Sparepart Akan Habis Umur", value: nearEndOfLife.length, color: "from-yellow-400 to-amber-500" },
+      { key: "ok", name: "Sparepart OK", value: ok.length, color: "from-green-500 to-emerald-600" },
+    ]);
+
+    setFilteredData(combined);
+  }, [
+    ilapak.data,
+    sig.data,
+    unifill.data,
+    chimei.data,
+    jinsung.data,
+    jihcheng.data,
+    cosmec.data,
+    fbd.data,
+    temach.data,
+    supermixer.data,
+    mixing.data,
+    storage.data,
+    aquademin.data,
+    deminpanas.data,
+    boiler.data,
+    genset.data,
+    chiller.data,
+    kompressor.data,
+    pw.data,
+    ahu.data,
+  ]);
 
   // fungsi filter dari card
   const handleFilter = (tab: "all" | "overdue" | "nearend" | "ok") => {

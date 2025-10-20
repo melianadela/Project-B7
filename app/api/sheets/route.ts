@@ -53,7 +53,7 @@ function applyFilters(
   data: any[],
   machineFilter?: string,
   statusFilter?: string,
-  worksheetName?: string // kirimkan dari parent
+  worksheetName?: string
 ) {
   let filteredData = data;
 
@@ -65,18 +65,22 @@ function applyFilters(
     });
   }
 
+  // 💥 Filter mesin tapi jangan terlalu ketat
   if (machineFilter && machineFilter.toLowerCase() !== "all") {
+    const normalizedMachine = machineFilter.toLowerCase().trim();
+
     filteredData = filteredData.filter((item) => {
       const itemMachine = (item.mesin || "").toLowerCase().trim();
-      const filterMachine = machineFilter.toLowerCase().trim();
+
+      // case 1: match persis
+      if (itemMachine === normalizedMachine) return true;
+
+      // case 2: machineFilter adalah subset dari itemMachine (ex: "ilapak" → "ilapak 1")
+      if (itemMachine.includes(normalizedMachine)) return true;
+
+      // case 3: worksheet name match sebagian
       const worksheet = (worksheetName || "").toLowerCase().trim();
-
-      // case 1: worksheet dan machine beda (contoh: mixing tank → silverson)
-      if (itemMachine === filterMachine) return true;
-
-      // case 2: worksheet dan machine mirip (contoh: super mixer → super mixer 1)
-      // hanya ambil yang persis sama, bukan yang startsWith
-      if (itemMachine === filterMachine && worksheet.includes(filterMachine)) return true;
+      if (worksheet && itemMachine.includes(worksheet)) return true;
 
       return false;
     });

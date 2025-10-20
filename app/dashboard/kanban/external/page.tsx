@@ -241,12 +241,12 @@ export default function KanbanExternalPage() {
         const ks = getKanbanStatusFromRow(r);
         if (ks !== "completed") return false;
 
-        // auto-hide setelah 1 hari dari tanggalReceipt
+        // auto-hide setelah 7 hari dari tanggalReceipt
         const tanggalReceipt = r.tanggal_receipt || r.tanggalReceipt;
         if (tanggalReceipt) {
           const d = new Date(tanggalReceipt);
           const diffDays = (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24);
-          if (diffDays > 1) return false;
+          if (diffDays > 14) return false;
         }
         return true;
       }),
