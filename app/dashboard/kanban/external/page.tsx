@@ -118,6 +118,67 @@ export default function KanbanExternalPage() {
   });
   const [rowPO, setRowPO] = useState<KanbanRow | null>(null);
 
+  // ======== FORM PEMAKAIAN SPARE PART ========
+    const [showPemakaianForm, setShowPemakaianForm] = useState(false);
+    const [formPemakaian, setFormPemakaian] = useState({
+      tanggal: "",
+      tipe_kanban: "EKSTERNAL",
+      kode_part: "",
+      part: "",
+      qty_pemakaian: "",
+      keterangan: "",
+      operator: "",
+    });
+
+    async function submitPemakaian() {
+      if (!formPemakaian.tanggal || !formPemakaian.kode_part || !formPemakaian.qty_pemakaian) {
+        alert("⚠️ Isi minimal Tanggal, Kode Part, dan Qty Pemakaian!");
+        return;
+      }
+
+      try {
+        const payload = {
+          payload: {
+            Tanggal: formPemakaian.tanggal,
+            "Tipe Kanban": formPemakaian.tipe_kanban,
+            "Kode Part": formPemakaian.kode_part,
+            Part: formPemakaian.part,
+            "Qty Pemakaian": formPemakaian.qty_pemakaian,
+            Keterangan: formPemakaian.keterangan,
+            Operator: formPemakaian.operator,
+          },
+          sheet: "PEMAKAIAN_SPAREPART", // target sheet
+        };
+
+        const res = await fetch("/api/kanban", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({payload: formPemakaian,}),
+        });
+
+        const json = await res.json();
+        if (json.success) {
+          alert("✅ Data pemakaian berhasil disimpan!");
+          setShowPemakaianForm(false);
+          setFormPemakaian({
+            tanggal: "",
+            tipe_kanban: "EKSTERNAL",
+            kode_part: "",
+            part: "",
+            qty_pemakaian: "",
+            keterangan: "",
+            operator: "",
+          });
+        } else {
+          alert("❌ Gagal simpan ke sheet, cek console.");
+          console.error(json);
+        }
+      } catch (err) {
+        console.error("submitPemakaian error", err);
+        alert("❌ Error kirim data ke API.");
+      }
+    }
+
   // Receipt form
   const [showReceiptForm, setShowReceiptForm] = useState(false);
   const [formReceipt, setFormReceipt] = useState({
@@ -451,7 +512,7 @@ return;
     const payload = {
       payload: {
         noPr: prValue,
-        status: "PO Dibuat",
+        status: "PO Diajukan",
         po: poNumber,
         tanggalpo,
         eta,
@@ -543,7 +604,7 @@ return;
       }
 
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Daftar Sparepart");
+      XLSX.utils.book_append_sheet(wb, ws, "Daftar Spare part");
 
       // 🔹 Simpan file
       XLSX.writeFile(wb, "Daftar_Sparepart.xlsx");
@@ -575,7 +636,7 @@ return;
     ]);
 
     doc.setFontSize(12);
-    doc.text("Daftar Semua Sparepart", 40, 30);
+    doc.text("Daftar Semua Spare part", 40, 30);
 
     autoTable(doc, {
       head: [tableColumn],
@@ -688,6 +749,7 @@ return;
       return flagged && !r.PR && !r.po && !r.noPr;
     });
 
+    //INI BUAT ON HAND SETELAH PEMAKAIAN
     const header = [
       "Part",
       "Kode Part",
@@ -798,14 +860,14 @@ return;
       <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Kanban Eksternal</h1>
 
       <div className="grid grid-cols-3 gap-4">
-        {/* Total Sparepart */}
+        {/* Total Spare part */}
         <Card
           onClick={() => setShowListModal("total")}
           className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:bg-blue-100 dark:hover:bg-blue-800/40 active:scale-95"
         >
           <CardContent>
             <div className="text-sm text-slate-600 dark:text-slate-300">
-              Total Sparepart Kontrak Servis
+              Total Spare part Kontrak Servis
             </div>
             <div className="text-2xl font-bold">{totalSparepart} Item</div>
           </CardContent>
@@ -914,7 +976,7 @@ return;
                           </Button>
                         )}
 
-                        {r.status === "PO Dibuat" && (
+                        {r.status === "PO Diajukan" && (
                           <Button
                             size="sm"
                             className="bg-green-600 text-white"
@@ -1445,7 +1507,7 @@ return;
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">
                 {showListModal === "total" 
-                  ? "Daftar Semua Sparepart" 
+                  ? "Daftar Semua Spare part" 
                   : "Part Harus Dipesan Bulan Ini"}
               </h2>
               <div className="flex gap-2">
@@ -1576,24 +1638,47 @@ return;
                       <td className="px-3 py-2">{r.kodepart}</td>
                       <td className="px-3 py-2 text-center">{r.kebutuhan_per_tahun || "-"}</td>
                       <td className="px-3 py-2 text-center">{r.safety_stock_statistik || "-"}</td>
-                      <td className="px-3 py-2 ">{r.total_kebutuhan_per_tahun || "-"}</td>
-                      <td className="px-3 py-2">{r.sisa_qty_di_vendor || "-"}</td>
-                      <td className="px-3 py-2">{r.on_hand_invenotry || "-"}</td>
+                      <td className="px-3 py-2 text-center">{r.total_kebutuhan_per_tahun || "-"}</td>
+                      <td className="px-3 py-2 text-center">{r.sisa_qty_di_vendor || "-"}</td>
+                      <td className="px-3 py-2 text-center">{r.on_hand_invenotry || "-"}</td>
                       <td className="px-3 py-2">{r.vendor}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 flex gap-2 justify-center">
+                        {/* Tombol Buat PR hanya muncul untuk “harus dipesan” */}
                         {showListModal === "harusDipesan" &&
                           getKanbanStatusFromRow(r) === "not_started" && (
                             <Button
                               size="sm"
                               onClick={() => {
-                                setShowListModal(null); // ✅ Tutup modal list dulu
-                                createPR(r);            // ✅ Lalu buka form PR
+                                setShowListModal(null);
+                                createPR(r);
                               }}
                               disabled={processingKey === (r.kodepart || r.part)}
                             >
                               Buat PR
                             </Button>
                           )}
+
+                        {/* Tombol Input Pemakaian hanya muncul di “Daftar Semua Sparepart” */}
+                        {showListModal === "total" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setFormPemakaian({
+                                tanggal: new Date().toISOString().slice(0, 10),
+                                tipe_kanban: "EKSTERNAL",
+                                kode_part: r.kodepart || "",
+                                part: r.part || "",
+                                qty_pemakaian: "",
+                                keterangan: "",
+                                operator: "",
+                              });
+                              setShowPemakaianForm(true);
+                            }}
+                          >
+                            Input Pemakaian
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1651,6 +1736,78 @@ return;
           </div>
         </div>
       )}
+      {/* Modal Input Pemakaian */}
+        {showPemakaianForm && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg p-6 w-[400px] text-slate-900 dark:text-slate-100">
+              <h2 className="text-lg font-bold mb-4">Input Pemakaian Spare part</h2>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium">Tanggal *</label>
+                  <input
+                    type="date"
+                    className="w-full border rounded px-2 py-1"
+                    value={formPemakaian.tanggal}
+                    onChange={(e) => setFormPemakaian({ ...formPemakaian, tanggal: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Kode Part *</label>
+                  <input
+                    type="text"
+                    className="w-full border rounded px-2 py-1 bg-gray-100 dark:bg-slate-700 cursor-not-allowed"
+                    value={formPemakaian.kode_part}
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Nama Part</label>
+                  <input
+                    type="text"
+                    className="w-full border rounded px-2 py-1 bg-gray-100 dark:bg-slate-700 cursor-not-allowed"
+                    value={formPemakaian.part}
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Qty Pemakaian *</label>
+                  <input
+                    type="number"
+                    className="w-full border rounded px-2 py-1"
+                    value={formPemakaian.qty_pemakaian}
+                    onChange={(e) => setFormPemakaian({ ...formPemakaian, qty_pemakaian: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Keterangan</label>
+                  <input
+                    type="text"
+                    className="w-full border rounded px-2 py-1"
+                    value={formPemakaian.keterangan}
+                    onChange={(e) => setFormPemakaian({ ...formPemakaian, keterangan: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Operator</label>
+                  <input
+                    type="text"
+                    className="w-full border rounded px-2 py-1"
+                    value={formPemakaian.operator}
+                    onChange={(e) => setFormPemakaian({ ...formPemakaian, operator: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="ghost" onClick={() => setShowPemakaianForm(false)}>Batal</Button>
+                <Button className="bg-blue-600 text-white" onClick={submitPemakaian}>
+                  Simpan
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }

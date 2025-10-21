@@ -128,9 +128,9 @@ const LifetimeOverviewPage: React.FC = () => {
     );
 
     setDistribution([
-      { key: "overdue", name: "Sparepart Overdue", value: overdue.length, color: "from-red-500 to-red-700" },
-      { key: "nearend", name: "Sparepart Akan Habis Umur", value: nearEndOfLife.length, color: "from-yellow-400 to-amber-500" },
-      { key: "ok", name: "Sparepart OK", value: ok.length, color: "from-green-500 to-emerald-600" },
+      { key: "overdue", name: "Spare part Overdue", value: overdue.length, color: "from-red-500 to-red-700" },
+      { key: "nearend", name: "Spare part Akan Habis Umur", value: nearEndOfLife.length, color: "from-yellow-400 to-amber-500" },
+      { key: "ok", name: "Spare part OK", value: ok.length, color: "from-green-500 to-emerald-600" },
     ]);
 
     setFilteredData(combined);
@@ -181,10 +181,10 @@ const LifetimeOverviewPage: React.FC = () => {
 
   // mapping subtitle tabel biar dinamis
   const tableSubtitle: Record<string, string> = {
-    all: "Daftar seluruh sparepart",
-    overdue: "Daftar sparepart overdue",
-    nearend: "Daftar sparepart akan habis umur",
-    ok: "Daftar sparepart OK",
+    all: "Daftar seluruh spare part",
+    overdue: "Daftar spare part overdue",
+    nearend: "Daftar spare part akan habis umur",
+    ok: "Daftar spare part OK",
   };
 
   return (
@@ -194,7 +194,7 @@ const LifetimeOverviewPage: React.FC = () => {
         📊 Lifetime Overview
       </h1>
       <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-        Ringkasan kondisi sparepart untuk seluruh mesin
+        Ringkasan kondisi spare part untuk seluruh mesin
       </p>
       <div className="mt-4 h-1 w-500 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
 
@@ -207,7 +207,7 @@ const LifetimeOverviewPage: React.FC = () => {
             bg-gradient-to-br from-sky-500 to-blue-600 
             ${activeTab === "all" ? "ring-4 ring-offset-2 ring-blue-400" : ""}`}
         >
-          <h4 className="text-lg font-semibold text-white">Semua Sparepart</h4>
+          <h4 className="text-lg font-semibold text-white">Semua Spare part</h4>
           <p className="mt-2 text-3xl font-bold text-white">{allSpareparts.length}</p>
         </div>
 
@@ -263,7 +263,7 @@ const LifetimeOverviewPage: React.FC = () => {
       {/* TABLE */}
       <div className="mt-12 mb-20">
         <h3 className="mb-1 text-2xl font-semibold text-gray-900 dark:text-white">
-          Sparepart Lifetime Table
+          Spare part Lifetime Table
         </h3>
         <p className="mb-5 text-sm text-gray-500">{tableSubtitle[activeTab]}</p>
         <SparepartTable data={filteredData} showMachine worksheet="LIFETIME_OVERVIEW" />

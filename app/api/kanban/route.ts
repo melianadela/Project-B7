@@ -189,36 +189,66 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// --- POST → buat PR baru ---
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const payload = body.payload ?? body;
-
     const sheets = createSheetsClient();
 
+    // deteksi otomatis: kalau ada field qty_pemakaian → berarti form pemakaian
+    const isPemakaian = !!payload.qty_pemakaian || !!payload.operator;
+
+    if (isPemakaian) {
+      // 🧾 kirim ke sheet KANBAN_PEMAKAIAN
+      const now = new Date();
+      const tanggal = payload.tanggal || now.toISOString().split("T")[0];
+      const values = [
+        tanggal,                            // A: tanggal
+        payload.tipe_kanban || "EKSTERNAL", // B
+        payload.kode_part || "",             // C
+        payload.part || "",                  // D
+        payload.qty_pemakaian || "",         // E
+        payload.keterangan || "",            // F
+        payload.operator || "",              // G
+      ];
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: process.env.sheet_id!,
+        range: `PEMAKAIAN_SPAREPART!A:G`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [values] },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "✅ Data pemakaian berhasil ditambahkan ke KANBAN_PEMAKAIAN",
+        values,
+      });
+    }
+
+    // ✳️ selain itu tetap ke sheet KANBAN_TRACKING (buat PR/PO)
     const values = [
-      payload.Tanggal ?? new Date().toISOString().split("T")[0], // A: Tanggal
-      payload.PR ?? `PR-${Date.now()}`,                         // B: PR
-      payload.tanggalpr ?? new Date().toISOString().split("T")[0], // C: Tanggal PR
-      "",                                                       // D: PO
-      "",                                                       // E: Tanggal PO
-      payload["Tipe Kanban"] ?? "EKSTERNAL",                    // F: Tipe Kanban
-      payload["Kode Part"] ?? "",                               // G: Kode Part
-      payload.Part ?? "",                                       // H: Part
-      payload["Untuk Bulan"] ?? "",                             // I: Untuk Bulan
-      payload["Qty Order"] ?? "",                               // J: Qty Order
-      payload.UOM ?? "",                                        // K: UOM
-      payload.Satuan ?? "",                                     // L: Satuan
-      payload.Harga ?? "",                                      // M: Harga
-      payload.Supplier ?? "",                                   // N: Supplier
-      payload.LeadTime ?? "",                                   // O: Lead Time
-      payload.ETA ?? "",                                        // P: ETA
-      "",                                                       // Q: Tanggal Receipt
-      "",                                                       // R: No Receipt
-      payload.Status ?? "PR Dibuat",                            // S: Status
-      payload.Keterangan ?? "",                                 // T: Keterangan
-      payload.PIC ?? "",                                        // U: PIC
+      payload.Tanggal ?? new Date().toISOString().split("T")[0],
+      payload.PR ?? `PR-${Date.now()}`,
+      payload.tanggalpr ?? new Date().toISOString().split("T")[0],
+      "",
+      "",
+      payload["Tipe Kanban"] ?? "EKSTERNAL",
+      payload["Kode Part"] ?? "",
+      payload.Part ?? "",
+      payload["Untuk Bulan"] ?? "",
+      payload["Qty Order"] ?? "",
+      payload.UOM ?? "",
+      payload.Satuan ?? "",
+      payload.Harga ?? "",
+      payload.Supplier ?? "",
+      payload.LeadTime ?? "",
+      payload.ETA ?? "",
+      "",
+      "",
+      payload.Status ?? "PR Dibuat",
+      payload.Keterangan ?? "",
+      payload.PIC ?? "",
     ];
 
     await sheets.spreadsheets.values.append({
@@ -228,10 +258,17 @@ export async function POST(request: NextRequest) {
       requestBody: { values: [values] },
     });
 
-    return NextResponse.json({ success: true, message: "PR created", values });
+    return NextResponse.json({
+      success: true,
+      message: "✅ PR berhasil dibuat di KANBAN_TRACKING",
+      values,
+    });
   } catch (err: any) {
     console.error("POST /api/kanban error:", err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: err.message },
+      { status: 500 }
+    );
   }
 }
 

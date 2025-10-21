@@ -284,11 +284,11 @@ export function MachineStatsCards({
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Total */}
         <Card
-          onClick={() => showModalWith("Semua Sparepart", [], onTotalClick)}
+          onClick={() => showModalWith("Semua Spare part", [], onTotalClick)}
           className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Total Sparepart Terpantau</h3>
+            <h3 className="text-2xl font-bold">Total Spare part Terpantau</h3>
             <Wrench className="w-15 h-15 text-gray-500" />
           </div>
           <div className="mt-4 text-6xl font-bold">
@@ -299,11 +299,11 @@ export function MachineStatsCards({
 
         {/* Expiring Soon */}
         <Card
-          onClick={() => showModalWith("Sparepart Akan Habis Umur", [], onExpiringClick)}
+          onClick={() => showModalWith("Spare part Akan Habis Umur", [], onExpiringClick)}
           className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Sparepart Akan Habis Umur</h3>
+            <h3 className="text-2xl font-bold">Spare part Akan Habis Umur</h3>
             <Clock className="w-15 h-15 text-gray-500" />
           </div>
           <p className="text-sm md:text-base lg:text-lg text-gray-700">&lt; 14 hari</p>
@@ -315,11 +315,11 @@ export function MachineStatsCards({
 
         {/* Overdue */}
         <Card
-          onClick={() => showModalWith("Sparepart Overdue", [], onOverdueClick)}
+          onClick={() => showModalWith("Spare part Overdue", [], onOverdueClick)}
           className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Sparepart Overdue</h3>
+            <h3 className="text-2xl font-bold">Spare part Overdue</h3>
             <AlertTriangle className="w-15 h-15 text-gray-500" />
           </div>
           <div className="mt-4 text-6xl font-bold">
@@ -330,11 +330,11 @@ export function MachineStatsCards({
 
         {/* OK */}
         <Card
-          onClick={() => showModalWith("Sparepart OK", [], onOkClick)}
+          onClick={() => showModalWith("Spare part OK", [], onOkClick)}
           className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Sparepart Aktif (OK)</h3>
+            <h3 className="text-2xl font-bold">Spare part Aktif (OK)</h3>
             <CheckCircle className="w-15 h-15 text-gray-500" />
           </div>
           <div className="mt-4 text-6xl font-bold">
@@ -367,8 +367,8 @@ export function OverdueTable({ data, showMachine = false }: OverdueTableProps) {
     <Card>
       <BorderBeam duration={6} size={400} className="from-transparent via-slate-600 to-transparent" />
       <CardHeader>
-        <CardTitle>Sparepart Overdue</CardTitle>
-        <CardDescription>Daftar sparepart yang melewati jadwal penggantian</CardDescription>
+        <CardTitle>Spare part Overdue</CardTitle>
+        <CardDescription>Daftar spare part yang melewati jadwal penggantian</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
@@ -416,10 +416,10 @@ export function OverdueTable({ data, showMachine = false }: OverdueTableProps) {
 export function PieChartDistribution({ data }: PieChartDistributionProps) {
   const COLORS = ["#f5ff34ff", "#e42b2bff", "#11f611ff", "#FF8042"];
   const chartConfig = {
-    sparepart: { label: "Sparepart", color: "#CCCCCC" },
-    "Sparepart yang akan habis umur": { label: "Sparepart yang akan habis umur", color: COLORS[0] },
-    "Sparepart overdue": { label: "Sparepart overdue", color: COLORS[1] },
-    "Sparepart OK": { label: "Sparepart OK", color: COLORS[2] },
+    sparepart: { label: "Spare part", color: "#CCCCCC" },
+    "Spare part yang akan habis umur": { label: "Spare part yang akan habis umur", color: COLORS[0] },
+    "Spare part overdue": { label: "Spare part overdue", color: COLORS[1] },
+    "Spare part OK": { label: "Spare part OK", color: COLORS[2] },
   } as unknown as ChartConfig;
 
   const validData = data.filter((d) => d.value > 0).map((d) => ({ ...d, fill: chartConfig[d.name as keyof typeof chartConfig]?.color || "#CCCCCC" }));
@@ -428,10 +428,10 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
   <Card className="w-[1200px] h-[450px]">
     <CardHeader className="items-center pb-0">
       <CardTitle className="text-xl md:text-2xl font-bold tracking-tight">
-        Distribusi Sparepart
+        Distribusi Spare part
       </CardTitle>
       <CardDescription className="text-sm md:text-lg text-gray-500 dark:text-gray-400">
-        Berdasarkan status umur sparepart
+        Berdasarkan status umur spare part
       </CardDescription>
     </CardHeader>
     <CardContent className="flex items-center justify-center">
@@ -466,7 +466,7 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
 );
 }
 
-/* --- SparepartTable (with export PDF) --- */
+/* --- Spare partTable (with export PDF) --- */
 export function SparepartTable({ data, showMachine = false, worksheet }: SparepartTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -526,7 +526,7 @@ async function handleSubmitTanggal() {
 
   function exportPDF() {
     const doc = new jsPDF({ unit: "pt", format: "a4" });
-    doc.text("Daftar Sparepart", 40, 40);
+    doc.text("Daftar Spare part", 40, 40);
     const body = filteredData.map((r) => [
       showMachine ? r.mesin : undefined,
       r.kodepart || "-",
@@ -548,8 +548,8 @@ async function handleSubmitTanggal() {
     <Card>
       <CardHeader className="flex items-center justify-between pb-0">
         <div>
-          <CardTitle>Daftar Sparepart</CardTitle>
-          <CardDescription>Daftar seluruh sparepart</CardDescription>
+          <CardTitle>Daftar Spare part</CardTitle>
+          <CardDescription>Daftar seluruh spare part</CardDescription>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={exportPDF}><Printer /></Button>

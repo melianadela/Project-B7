@@ -70,7 +70,7 @@ export default function MachineDashboardPage() {
   if (!allSpareparts) return;
   const spareparts = allSpareparts as Sparepart[];
 
-  console.log("🔍 Data Spareparts:", spareparts.map(sp => sp.status));
+  console.log("🔍 Data Spare parts:", spareparts.map(sp => sp.status));
 
   const overdue = spareparts.filter((sp) => {
     const s = sp.status?.toLowerCase() || "";
@@ -107,9 +107,9 @@ export default function MachineDashboardPage() {
   setMachineSpareparts(spareparts);
 
   setSparepartDistribution([
-    { name: "Sparepart yang akan habis umur", value: expiring.length },
-    { name: "Sparepart overdue", value: overdue.length },
-    { name: "Sparepart OK", value: ok.length },
+    { name: "Spare part yang akan habis umur", value: expiring.length },
+    { name: "Spare part overdue", value: overdue.length },
+    { name: "Spare part OK", value: ok.length },
   ]);
 }, [allSpareparts]);
 
@@ -129,7 +129,7 @@ export default function MachineDashboardPage() {
       />
 
       <div className="mt-10">
-        <h3 className="mb-5 text-2xl font-semibold">Distribution Spareparts</h3>
+        <h3 className="mb-5 text-2xl font-semibold">Distribution Spare parts</h3>
         <div className="flex justify-center">
           <PieChartDistribution data={sparepartDistribution} />
         </div>
