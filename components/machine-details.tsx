@@ -284,11 +284,11 @@ export function MachineStatsCards({
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Total */}
         <Card
-          onClick={() => showModalWith("Semua Spare part", [], onTotalClick)}
+          onClick={() => showModalWith("Semua Spare Part", [], onTotalClick)}
           className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Total Spare part Terpantau</h3>
+            <h3 className="text-2xl font-bold">Total Spare Part Terpantau</h3>
             <Wrench className="w-15 h-15 text-gray-500" />
           </div>
           <div className="mt-4 text-6xl font-bold">
@@ -303,7 +303,7 @@ export function MachineStatsCards({
           className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Spare part Akan Habis Umur</h3>
+            <h3 className="text-2xl font-bold">Spare Part Akan Habis Umur</h3>
             <Clock className="w-15 h-15 text-gray-500" />
           </div>
           <p className="text-sm md:text-base lg:text-lg text-gray-700">&lt; 14 hari</p>
@@ -319,7 +319,7 @@ export function MachineStatsCards({
           className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Spare part Overdue</h3>
+            <h3 className="text-2xl font-bold">Spare Part Overdue</h3>
             <AlertTriangle className="w-15 h-15 text-gray-500" />
           </div>
           <div className="mt-4 text-6xl font-bold">
@@ -334,7 +334,7 @@ export function MachineStatsCards({
           className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Spare part Aktif (OK)</h3>
+            <h3 className="text-2xl font-bold">Spare Part Aktif (OK)</h3>
             <CheckCircle className="w-15 h-15 text-gray-500" />
           </div>
           <div className="mt-4 text-6xl font-bold">
@@ -367,7 +367,7 @@ export function OverdueTable({ data, showMachine = false }: OverdueTableProps) {
     <Card>
       <BorderBeam duration={6} size={400} className="from-transparent via-slate-600 to-transparent" />
       <CardHeader>
-        <CardTitle>Spare part Overdue</CardTitle>
+        <CardTitle>Spare Part Overdue</CardTitle>
         <CardDescription>Daftar spare part yang melewati jadwal penggantian</CardDescription>
       </CardHeader>
       <CardContent>

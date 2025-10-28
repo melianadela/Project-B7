@@ -39,7 +39,7 @@ export default function Home() {
         className="relative z-10 flex flex-col items-center px-6 text-center"
       >
         {/* Judul */}
-        <h1 className="text-4xl font-bold mb-3 text-slate-700">
+        <h1 className="text-4xl font-bold mb-3 text-[#0f265c]">
           Selamat Datang di Sistem Dashboard Spare Part
         </h1>
 

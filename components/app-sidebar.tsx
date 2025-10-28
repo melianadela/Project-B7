@@ -169,25 +169,17 @@ const data = {
           },
           {
             title: "GENSET",
-            items: [
-              { title: "GENSET", url: "/dashboard/lifetime/genset/_" },
-              { title: "GENSET 1", url: "/dashboard/lifetime/genset/1" },
-              { title: "GENSET 2", url: "/dashboard/lifetime/genset/2" },
-            ],
+            url: "/dashboard/lifetime/genset/_",
           },
           {
             title: "CHILLER",
             items: [
-              { title: "CHILLER", url: "/dashboard/lifetime/chiller/_" },
-              { title: "CHILLER DAIKIN", url: "/dashboard/lifetime/chiller/daikin" },
-              { title: "CHILLER HITACHI", url: "/dashboard/lifetime/chiller/hitachi" },
               { title: "CHILLER TRANE", url: "/dashboard/lifetime/chiller/trane" },
             ],
           },
           {
             title: "KOMPRESSOR",
             items: [
-              { title: "KOMPRESSOR", url: "/dashboard/lifetime/kompressor/_" },
               { title: "KOMPRESSOR 2", url: "/dashboard/lifetime/kompressor/2" },
               { title: "KOMPRESSOR 3", url: "/dashboard/lifetime/kompressor/3" },
               { title: "KOMPRESSOR ELGI", url: "/dashboard/lifetime/kompressor/elgi" },
@@ -196,12 +188,9 @@ const data = {
           {
             title: "PURIFIED WATER (PW)",
             items: [
-              { title: "PW", url: "/dashboard/lifetime/purified-water-(pw)/pw" },
               { title: "PW 1", url: "/dashboard/lifetime/purified-water-(pw)/pw-1" },
               { title: "PW 2", url: "/dashboard/lifetime/purified-water-(pw)/pw-2" },
               { title: "PW 3", url: "/dashboard/lifetime/purified-water-(pw)/pw-3" },
-              { title: "SANITASI PW 3", url: "/dashboard/lifetime/purified-water-(pw)/sanitasi-pw-3" },
-              { title: "SOFT WATER PW 3", url: "/dashboard/lifetime/purified-water-(pw)/soft-water-pw-3" },
             ],
           },
           {
@@ -249,15 +238,6 @@ const data = {
               { title: "AHU 306", url: "/dashboard/lifetime/ahu/ahu-306" },
               { title: "AHU 307", url: "/dashboard/lifetime/ahu/ahu-307" },
               { title: "AHU 308", url: "/dashboard/lifetime/ahu/ahu-308" },
-              { title: "PM AHU 101", url: "/dashboard/lifetime/ahu/pm-ahu-101" },
-              { title: "PM AHU 102", url: "/dashboard/lifetime/ahu/pm-ahu-102" },
-              { title: "PM AHU 106", url: "/dashboard/lifetime/ahu/pm-ahu-106" },
-              { title: "PM AHU 107", url: "/dashboard/lifetime/ahu/pm-ahu-107" },
-              { title: "PM AHU 108", url: "/dashboard/lifetime/ahu/pm-ahu-108" },
-              { title: "PM AHU 110", url: "/dashboard/lifetime/ahu/pm-ahu-110" },
-              { title: "PM AHU 111", url: "/dashboard/lifetime/ahu/pm-ahu-111" },
-              { title: "PM AHU 114", url: "/dashboard/lifetime/ahu/pm-ahu-114" },
-              { title: "PM AHU 116", url: "/dashboard/lifetime/ahu/pm-ahu-116" },
             ],
           },
         ],
