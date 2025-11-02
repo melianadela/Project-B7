@@ -40,7 +40,7 @@ export default function Home() {
       >
         {/* Judul */}
         <h1 className="text-4xl font-bold mb-3 text-[#0f265c]">
-          Selamat Datang di Sistem Dashboard Spare Part
+          Sistem Dashboard Spare Part PT Bintang Toedjoe
         </h1>
 
         {/* Subjudul */}
