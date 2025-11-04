@@ -52,30 +52,6 @@ export default function MachineDashboardPage() {
     machineName = worksheetName;
   }
 
-  // === Tampilan khusus untuk GENSET ===
-  const normalized = (machineName || "").toLowerCase().trim();
-  if (normalized.includes("genset")) {
-    return (
-      <div
-        className="flex flex-col items-center justify-center min-h-[80vh] text-center px-8"
-        style={{
-          background: "linear-gradient(135deg, #f8fbff 0%, #e3f2fa 50%, #c6e4f3 100%)",
-          color: "#1D2C8A",
-        }}
-      >
-        <h1 className="text-5xl font-extrabold mb-4 text-blue-700 drop-shadow-sm">
-          ⚡GENSET STATUS MONITORING
-        </h1>
-        <p className="text-2xl text-gray-700 max-w-2xl leading-relaxed font-semibold">
-          Mesin Ini Tidak Memiliki Part Time-Based
-        </p>
-      </div>
-    );
-  }
-
-  console.log("worksheet:", worksheetName);
-  console.log("machine:", machineName);
-
   const { data: allSpareparts } = useSheetData({
     worksheet: worksheetName,
     machine: machineName,
@@ -133,7 +109,30 @@ export default function MachineDashboardPage() {
     { name: "Spare part OK", value: ok.length },
   ]);
 }, [allSpareparts]);
+  
+// === Tampilan khusus untuk GENSET ===
+  const normalized = (machineName || "").toLowerCase().trim();
+  if (normalized.includes("genset")) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center min-h-[80vh] text-center px-8"
+        style={{
+          background: "linear-gradient(135deg, #f8fbff 0%, #e3f2fa 50%, #c6e4f3 100%)",
+          color: "#1D2C8A",
+        }}
+      >
+        <h1 className="text-5xl font-extrabold mb-4 text-blue-700 drop-shadow-sm">
+          ⚡GENSET STATUS MONITORING
+        </h1>
+        <p className="text-2xl text-gray-700 max-w-2xl leading-relaxed font-semibold">
+          Mesin Ini Tidak Memiliki Part Time-Based
+        </p>
+      </div>
+    );
+  }
 
+  console.log("worksheet:", worksheetName);
+  console.log("machine:", machineName);
 
   return (
     <div className="flex flex-col gap-4">
