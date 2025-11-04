@@ -444,8 +444,8 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
             <Pie
               data={validData}
               dataKey="value"
-              innerRadius={70}
-              outerRadius={125}
+              innerRadius={60}
+              outerRadius={120}
               paddingAngle={0}
             >
               {validData.map((entry, index) => (

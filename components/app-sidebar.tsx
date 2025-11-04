@@ -409,9 +409,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                                     size="sm"
                                                     className={`w-28 justify-start hover:bg-muted ${
                                                       isActiveLink(subItem.url)
-                                                        ? "bg-slate-200"
-                                                        : ""
-                                                    }`}
+                                                         ? "bg-blue-600 text-white dark:bg-blue-500 dark:text-white"
+                                                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
                                                   >
                                                     <span className="text-sm">
                                                       {subItem.title}
@@ -429,9 +428,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                           size="sm"
                                           className={`w-full justify-start hover:bg-muted ${
                                             isActiveLink(machine.url!)
-                                              ? "bg-slate-200"
-                                              : ""
-                                          }`}
+                                               ? "bg-blue-600 text-white dark:bg-blue-500 dark:text-white"
+                                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
                                         >
                                           <span className="text-sm">
                                             {machine.title}
@@ -488,8 +486,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                               <SidebarMenuButton
                                 size="sm"
                                 className={`w-full justify-start hover:bg-muted ${
-                                  isActiveLink(item.url) ? "bg-slate-500" : ""
-                                }`}
+                                  isActiveLink(item.url)  ? "bg-blue-600 text-white dark:bg-blue-500 dark:text-white"
+                                                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
                               >
                                 <span className="text-lg font-semibold">{item.title}</span>
                               </SidebarMenuButton>
