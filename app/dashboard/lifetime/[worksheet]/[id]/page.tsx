@@ -110,29 +110,32 @@ export default function MachineDashboardPage() {
   ]);
 }, [allSpareparts]);
   
-// === Tampilan khusus untuk GENSET ===
-  const normalized = (machineName || "").toLowerCase().trim();
-  if (normalized.includes("genset")) {
-    return (
-      <div
-        className="flex flex-col items-center justify-center min-h-[80vh] text-center px-8"
-        style={{
-          background: "linear-gradient(135deg, #f8fbff 0%, #e3f2fa 50%, #c6e4f3 100%)",
-          color: "#1D2C8A",
-        }}
+// --- 4️⃣ Tampilan khusus GENSET (adaptif light/dark)
+const normalized = machineName.toLowerCase().trim();
+if (normalized.includes("genset")) {
+  return (
+    <div
+      className="flex flex-col items-center justify-center min-h-[80vh] text-center px-8 
+                 transition-colors duration-300
+                 bg-gradient-to-br from-[#f8fbff] via-[#e3f2fa] to-[#c6e4f3]
+                 dark:from-[#0f172a] dark:via-[#1e293b] dark:to-[#334155]"
+    >
+      <h1
+        className="text-5xl font-extrabold mb-4 drop-shadow-sm
+                   text-blue-700 dark:text-blue-400"
       >
-        <h1 className="text-5xl font-extrabold mb-4 text-blue-700 drop-shadow-sm">
-          ⚡GENSET STATUS MONITORING
-        </h1>
-        <p className="text-2xl text-gray-700 max-w-2xl leading-relaxed font-semibold">
-          Mesin Ini Tidak Memiliki Part Time-Based
-        </p>
-      </div>
-    );
-  }
+        ⚡ GENSET STATUS MONITORING
+      </h1>
 
-  console.log("worksheet:", worksheetName);
-  console.log("machine:", machineName);
+      <p
+        className="text-2xl font-semibold
+                   text-gray-700 dark:text-gray-200"
+      >
+        Mesin Ini Tidak Memiliki Part Time-Based
+      </p>
+    </div>
+  );
+}
 
   return (
     <div className="flex flex-col gap-4">
