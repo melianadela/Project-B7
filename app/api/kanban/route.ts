@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
     const worksheet = worksheetForType(type);
 
     // ambil data eksternal/internal
-    const rows = await readSheetRange(worksheet, "A1:R1000");
+    const rows = await readSheetRange(worksheet, "A1:Q1000");
     const processed = processRows(rows);
 
     // ambil data tracking

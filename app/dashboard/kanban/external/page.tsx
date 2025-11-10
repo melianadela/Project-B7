@@ -915,7 +915,7 @@ return;
                 <h3 className="font-semibold mb-2">Not Started ({notStarted.length})</h3>
                 <div className="space-y-3 h-[55vh] overflow-y-auto pr-1">
                   {notStarted.map((r, idx) => (
-                    <Card key={r.__sheetRow ?? idx} className="border">
+                    <Card key={`${r.kodepart || "card"}-${idx}`} className="border">
                       <CardContent className="p-3">
                         <div className="flex justify-between">
                           <div>
@@ -944,7 +944,7 @@ return;
                 <h3 className="font-semibold mb-2">In Progress ({inProgress.length})</h3>
                 <div className="space-y-3 h-[55vh] overflow-y-auto pr-1">
                   {inProgress.map((r, idx) => (
-                    <Card key={r.__sheetRow ?? idx} className="border">
+                    <Card key={`${r.kodepart || "card"}-${idx}`} className="border">
                       <CardContent className="p-3 space-y-2">
                         <div className="flex justify-between">
                           <div>
@@ -1000,7 +1000,7 @@ return;
                 <h3 className="font-semibold mb-2">Completed ({completed.length})</h3>
                 <div className="space-y-3 h-[55vh] overflow-y-auto pr-1">
                   {completed.map((r, idx) => (
-                    <Card key={r.__sheetRow ?? idx} className="border">
+                    <Card key={`${r.kodepart || "card"}-${idx}`} className="border">
                       <CardContent className="p-3">
                         <div className="flex justify-between">
                           <div>
@@ -1046,7 +1046,7 @@ return;
                 </thead>
                 <tbody>
                   {filteredRows.map((r, idx) => (
-                    <tr key={r.__sheetRow ?? idx} className="border-t hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <tr key={`${r.kodepart || "row"}-${idx}`} className="border-t hover:bg-slate-50 dark:hover:bg-slate-800/50">
                       <td className="px-4 py-3">{r.kodepart}</td>
                       <td className="px-4 py-3">{r.part}</td>
                       <td className="px-4 py-3">{r.deadline_pemesanan || "-"}</td>
@@ -1117,7 +1117,7 @@ return;
                   {rows
                     .filter((r) => r.noPr || r.PR || r.po || r.no_po) // hanya yg punya PR/PO
                     .map((r, idx) => (
-                      <tr key={idx} className="border-t border-gray-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <tr key={`${r.kodepart || "row"}-${idx}`} className="border-t border-gray-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <td className="px-3 py-2">{r.tipe_kanban || "Eksternal"}</td>
                         <td className="px-3 py-2">{r.tanggal || "-"}</td>
                         <td className="px-3 py-2">{r.noPr || r.PR || "-"}</td>
@@ -1501,241 +1501,208 @@ return;
       {/* List Modal */}
       {showListModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6 mt-6 text-slate-900 dark:text-slate-100">
-            
-            {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">
-                {showListModal === "total" 
-                  ? "Daftar Semua Spare part" 
-                  : "Part Harus Dipesan Bulan Ini"}
-              </h2>
-              <div className="flex gap-2">
-                {showListModal === "total" ? (
-                  <>
-                    <Button
-                      onClick={() => exportExcel()}
-                      className="bg-emerald-600 text-white flex items-center gap-2"
-                    >
-                      <FileText size={16} /> Export Excel
-                    </Button>
-                    <Button
-                      onClick={() => exportPDF()}
-                      className="bg-red-600 text-white flex items-center gap-2"
-                    >
-                      <Printer size={16} /> Export PDF
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      onClick={() => exportHarusDipesanExcel()}
-                      className="bg-emerald-600 text-white flex items-center gap-2"
-                    >
-                      <FileText size={16} /> Export Excel
-                    </Button>
-                    <Button
-                      onClick={() => exportHarusDipesanPDF()}
-                      className="bg-red-600 text-white flex items-center gap-2"
-                    >
-                      <Printer size={16} /> Export PDF
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center mb-6 mt-2">
-              {/* Search bar */}
-              <div className="relative w-full max-w-sm">
-                <div
-                  className="absolute inset-y-0 left-0 flex items-center pl-3
-                            text-gray-500 dark:text-gray-400"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg p-6 w-[90vw] max-w-6xl max-h-[85vh] flex flex-col border border-slate-200 dark:border-slate-700">
+              
+              {/* Header */}
+              <div className="flex justify-between items-center mb-4 shrink-0">
+                <h2 className="text-lg font-bold">
+                  {showListModal === "total"
+                    ? "Daftar Semua Sparepart"
+                    : "Part Harus Dipesan Bulan Ini"}
+                </h2>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() =>
+                      showListModal === "total"
+                        ? exportExcel()
+                        : exportHarusDipesanExcel()
+                    }
+                    className="bg-emerald-600 text-white flex items-center gap-2"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18.5a7.5 7.5 0 006.15-1.85z"
-                    />
-                  </svg>
+                    <FileText size={16} /> Export Excel
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      showListModal === "total"
+                        ? exportPDF()
+                        : exportHarusDipesanPDF()
+                    }
+                    className="bg-red-600 text-white flex items-center gap-2"
+                  >
+                    <Printer size={16} /> Export PDF
+                  </Button>
                 </div>
+              </div>
 
+              {/* Search */}
+              <div className="mb-3 shrink-0">
                 <input
                   type="text"
                   placeholder="Search Part / Kode Part"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 rounded-lg border
-                            focus:outline-none focus:ring-2 focus:ring-blue-500
+                  className="w-full pl-3 pr-3 py-2.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500
                             bg-white text-gray-900 placeholder-gray-400 border-gray-300
                             dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:border-gray-700
                             transition-all duration-300 shadow-sm"
                 />
               </div>
-            </div>
 
-            {/* Table */}
-            <table className="min-w-full text-sm border">
-              <thead className="bg-slate-100 dark:bg-gray-800 dark:text-gray-100">
-              <tr className="border-b border-slate-200 dark:border-gray-700">
-                  <th className="px-3 py-2 text-center">Part</th>
-                  <th className="px-3 py-2 text-center">Kode Part</th>
-                  <th className="px-3 py-2 text-center">Kebutuhan Per Tahun</th>
-                  <th className="px-3 py-2 text-center">Safety Stock</th>
-                  <th className="px-3 py-2 text-center">Total Kebutuhan</th>
-                  <th className="px-3 py-2 text-center">Sisa Qty di Vendor</th>
-                  <th className="px-3 py-2 text-center">On Hand Inventory</th>
-                  <th className="px-3 py-2 text-center">Vendor</th>
-                  <th className="px-3 py-2 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(showListModal === "total" ? rows : rows.filter((r) => {
-                    const extStatus = (r.status_pemesanan || r.status || "").toString().toLowerCase();
-                    const flagged =
-                      extStatus.includes("siap") ||
-                      extStatus.includes("siapkan") ||
-                      extStatus.includes("harus") ||
-                      extStatus.includes("minta");
-
-                    const now = new Date();
-                    const currentMonth = now.getMonth();
-                    const currentYear = now.getFullYear();
-
-                    if (!r.deadline_pemesanan)
-                      return flagged && !r.PR && !r.po && !r.noPr;
-
-                    const parsed = Date.parse(r.deadline_pemesanan);
-                    if (!isNaN(parsed)) {
-                      const d = new Date(parsed);
-                      return (
-                        d.getMonth() === currentMonth &&
-                        d.getFullYear() === currentYear &&
-                        !r.PR && !r.po && !r.noPr
-                      );
-                    }
-                    return flagged && !r.PR && !r.po && !r.noPr;
-                  }))
-                  // 🔹 apply filter pencarian (search bar)
-                  .filter((r) =>
-                    (r.part || "").toLowerCase().includes(search.toLowerCase()) ||
-                    (r.kodepart || "").toLowerCase().includes(search.toLowerCase())
-                  )
-                  .map((r, idx) => (
-                    <tr
-                      key={idx}
-                      className="border-t border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800/60"
-                    >
-                      <td className="px-3 py-2">{r.part}</td>
-                      <td className="px-3 py-2">{r.kodepart}</td>
-                      <td className="px-3 py-2 text-center">{r.kebutuhan_per_tahun || "-"}</td>
-                      <td className="px-3 py-2 text-center">{r.safety_stock_statistik || "-"}</td>
-                      <td className="px-3 py-2 text-center">{r.total_kebutuhan_per_tahun || "-"}</td>
-                      <td className="px-3 py-2 text-center">{r.sisa_qty_di_vendor || "-"}</td>
-                      <td className="px-3 py-2 text-center">{r.on_hand_invenotry || "-"}</td>
-                      <td className="px-3 py-2">{r.vendor}</td>
-                      <td className="px-3 py-2 flex gap-2 justify-center">
-                        {/* Tombol Buat PR hanya muncul untuk “harus dipesan” */}
-                        {showListModal === "harusDipesan" &&
-                          getKanbanStatusFromRow(r) === "not_started" && (
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setShowListModal(null);
-                                createPR(r);
-                              }}
-                              disabled={processingKey === (r.kodepart || r.part)}
-                            >
-                              Buat PR
-                            </Button>
-                          )}
-
-                        {/* Tombol Input Pemakaian hanya muncul di “Daftar Semua Sparepart” */}
-                        {showListModal === "total" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setFormPemakaian({
-                                tanggal: new Date().toISOString().slice(0, 10),
-                                tipe_kanban: "EKSTERNAL",
-                                kode_part: r.kodepart || "",
-                                part: r.part || "",
-                                qty_pemakaian: "",
-                                keterangan: "",
-                                operator: "",
-                              });
-                              setShowPemakaianForm(true);
-                            }}
-                          >
-                            Input Pemakaian
-                          </Button>
-                        )}
-                      </td>
+              {/* Table area (scrollable) */}
+              <div className="flex-1 overflow-y-auto overflow-x-auto border rounded-md">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-slate-100 dark:bg-gray-800 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-3 py-2 text-center">Part</th>
+                      <th className="px-3 py-2 text-center">Kode Part</th>
+                      <th className="px-3 py-2 text-center">Kebutuhan Per Tahun</th>
+                      <th className="px-3 py-2 text-center">Safety Stock</th>
+                      <th className="px-3 py-2 text-center">Total Kebutuhan</th>
+                      <th className="px-3 py-2 text-center">Sisa Qty di Vendor</th>
+                      <th className="px-3 py-2 text-center">On Hand Inventory</th>
+                      <th className="px-3 py-2 text-center">Vendor</th>
+                      <th className="px-3 py-2 text-center">Aksi</th>
                     </tr>
-                  ))}
+                  </thead>
+                  <tbody>
+                    {(showListModal === "total"
+                      ? rows
+                      : rows.filter((r) => {
+                          const extStatus = (r.status_pemesanan || r.status || "")
+                            .toLowerCase();
+                          const flagged =
+                            extStatus.includes("siap") ||
+                            extStatus.includes("siapkan") ||
+                            extStatus.includes("harus") ||
+                            extStatus.includes("minta");
 
-                {/* fallback jika kosong */}
-                {(showListModal === "harusDipesan"
-                  ? rows.filter((r) => {
-                      const extStatus = (r.status_pemesanan || r.status || "").toString().toLowerCase();
-                      const flagged =
-                        extStatus.includes("siap") ||
-                        extStatus.includes("siapkan") ||
-                        extStatus.includes("harus") ||
-                        extStatus.includes("minta");
+                          const now = new Date();
+                          const currentMonth = now.getMonth();
+                          const currentYear = now.getFullYear();
 
-                      const now = new Date();
-                      const currentMonth = now.getMonth();
-                      const currentYear = now.getFullYear();
+                          if (!r.deadline_pemesanan)
+                            return flagged && !r.PR && !r.po && !r.noPr;
 
-                      if (!r.deadline_pemesanan)
-                        return flagged && !r.PR && !r.po && !r.noPr;
+                          const parsed = Date.parse(r.deadline_pemesanan);
+                          if (!isNaN(parsed)) {
+                            const d = new Date(parsed);
+                            return (
+                              d.getMonth() === currentMonth &&
+                              d.getFullYear() === currentYear &&
+                              !r.PR &&
+                              !r.po &&
+                              !r.noPr
+                            );
+                          }
+                          return flagged && !r.PR && !r.po && !r.noPr;
+                        }))
+                      .filter(
+                        (r) =>
+                          (r.part || "").toLowerCase().includes(search.toLowerCase()) ||
+                          (r.kodepart || "")
+                            .toLowerCase()
+                            .includes(search.toLowerCase())
+                      )
+                      .map((r, idx) => (
+                        <tr
+                          key={idx}
+                          className="border-t border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800/60"
+                        >
+                          <td className="px-3 py-2">{r.part}</td>
+                          <td className="px-3 py-2">{r.kodepart}</td>
+                          <td className="px-3 py-2 text-center">
+                            {r.kebutuhan_per_tahun || "-"}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            {r.safety_stock_statistik || "-"}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            {r.total_kebutuhan_per_tahun || "-"}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            {r.sisa_qty_di_vendor || "-"}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            {r.on_hand_inventory || "-"}
+                          </td>
+                          <td className="px-3 py-2">{r.vendor}</td>
+                          <td className="px-3 py-2 flex gap-2 justify-center">
+                            {showListModal === "harusDipesan" &&
+                              getKanbanStatusFromRow(r) === "not_started" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setShowListModal(null);
+                                    createPR(r);
+                                  }}
+                                  disabled={
+                                    processingKey === (r.kodepart || r.part)
+                                  }
+                                >
+                                  Buat PR
+                                </Button>
+                              )}
 
-                      const parsed = Date.parse(r.deadline_pemesanan);
-                      if (!isNaN(parsed)) {
-                        const d = new Date(parsed);
-                        return (
-                          d.getMonth() === currentMonth &&
-                          d.getFullYear() === currentYear &&
-                          !r.PR && !r.po && !r.noPr
-                        );
-                      }
-                      return flagged && !r.PR && !r.po && !r.noPr;
-                    }).length === 0
-                  : rows.length === 0) && (
-                  <tr>
-                    <td colSpan={9} className="text-center py-6 text-sm text-slate-500">
-                      {showListModal === "harusDipesan"
-                        ? "Tidak ada data harus dipesan bulan ini"
-                        : "Tidak ada data ditemukan"}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                            {showListModal === "total" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setFormPemakaian({
+                                    tanggal: new Date().toISOString().slice(0, 10),
+                                    tipe_kanban: "EKSTERNAL",
+                                    kode_part: r.kodepart || "",
+                                    part: r.part || "",
+                                    qty_pemakaian: "",
+                                    keterangan: "",
+                                    operator: "",
+                                  });
+                                  setShowPemakaianForm(true);
+                                }}
+                              >
+                                Input Pemakaian
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
 
-            {/* Footer */}
-            <div className="flex justify-end mt-4">
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={() => setShowListModal(null)}
-              >
-                ❌ Close
-              </Button>
+                    {(showListModal === "harusDipesan"
+                      ? rows.filter((r) => {
+                          const extStatus = (r.status_pemesanan || r.status || "")
+                            .toLowerCase();
+                          const flagged =
+                            extStatus.includes("siap") ||
+                            extStatus.includes("siapkan") ||
+                            extStatus.includes("harus") ||
+                            extStatus.includes("minta");
+                          return flagged && !r.PR && !r.po && !r.noPr;
+                        }).length === 0
+                      : rows.length === 0) && (
+                      <tr>
+                        <td
+                          colSpan={9}
+                          className="text-center py-6 text-sm text-slate-500"
+                        >
+                          {showListModal === "harusDipesan"
+                            ? "Tidak ada data harus dipesan bulan ini"
+                            : "Tidak ada data ditemukan"}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end mt-4 shrink-0">
+                <Button variant="outline" onClick={() => setShowListModal(null)}>
+                  ❌ Close
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       {/* Modal Input Pemakaian */}
         {showPemakaianForm && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
