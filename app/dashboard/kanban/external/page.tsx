@@ -288,10 +288,44 @@ export default function KanbanExternalPage() {
   }, [rows, currentMonth, currentYear]);
 
   // Groups based on computed kanban status (backend preferred, frontend fallback)
-  const notStarted = useMemo(
-    () => rows.filter((r) => getKanbanStatusFromRow(r) === "not_started"),
-    [rows]
-  );
+  const notStarted = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    return rows.filter((r) => {
+      const extStatus = (r.status_pemesanan || r.status || "").toString().toLowerCase();
+      const flagged =
+        extStatus.includes("siap") ||
+        extStatus.includes("siapkan") ||
+        extStatus.includes("harus") ||
+        extStatus.includes("minta");
+
+      const prStatus = (r.status || "").toLowerCase();
+      const sudahSelesai =
+        prStatus.includes("selesai") ||
+        prStatus.includes("diterima") ||
+        prStatus.includes("completed");
+
+      // ✅ boleh tampil kalau sudah completed tapi muncul lagi di plan bulan ini
+      if (!r.deadline_pemesanan)
+        return flagged && (!r.PR || sudahSelesai);
+
+      const parsed = Date.parse(r.deadline_pemesanan);
+      if (!isNaN(parsed)) {
+        const d = new Date(parsed);
+        return (
+          d.getMonth() === currentMonth &&
+          d.getFullYear() === currentYear &&
+          flagged &&
+          (!r.PR || sudahSelesai)
+        );
+      }
+
+      return flagged && (!r.PR || sudahSelesai);
+    });
+  }, [rows]);
+
   const inProgress = useMemo(
     () => rows.filter((r) => getKanbanStatusFromRow(r) === "in_progress"),
     [rows]
@@ -735,7 +769,7 @@ return;
       const currentYear = now.getFullYear();
 
       if (!r.deadline_pemesanan)
-        return flagged && !r.PR && !r.po && !r.noPr;
+        return flagged && (!r.po || r.status?.toLowerCase().includes("siap") || r.status?.toLowerCase().includes("harus"));
 
       const parsed = Date.parse(r.deadline_pemesanan);
       if (!isNaN(parsed)) {
@@ -795,7 +829,7 @@ return;
       const currentYear = now.getFullYear();
 
       if (!r.deadline_pemesanan)
-        return flagged && !r.PR && !r.po && !r.noPr;
+        return flagged && (!r.po || r.status?.toLowerCase().includes("siap") || r.status?.toLowerCase().includes("harus"));
 
       const parsed = Date.parse(r.deadline_pemesanan);
       if (!isNaN(parsed)) {
@@ -1568,34 +1602,39 @@ return;
                     {(showListModal === "total"
                       ? rows
                       : rows.filter((r) => {
-                          const extStatus = (r.status_pemesanan || r.status || "")
-                            .toLowerCase();
-                          const flagged =
-                            extStatus.includes("siap") ||
-                            extStatus.includes("siapkan") ||
-                            extStatus.includes("harus") ||
-                            extStatus.includes("minta");
+                      const extStatus = (r.status_pemesanan || r.status || "").toString().toLowerCase();
+                      const flagged =
+                        extStatus.includes("siap") ||
+                        extStatus.includes("siapkan") ||
+                        extStatus.includes("harus") ||
+                        extStatus.includes("minta");
 
-                          const now = new Date();
-                          const currentMonth = now.getMonth();
-                          const currentYear = now.getFullYear();
+                      const prStatus = (r.status || "").toLowerCase();
+                      const sudahSelesai =
+                        prStatus.includes("selesai") ||
+                        prStatus.includes("diterima") ||
+                        prStatus.includes("completed");
 
-                          if (!r.deadline_pemesanan)
-                            return flagged && !r.PR && !r.po && !r.noPr;
+                      const now = new Date();
+                      const currentMonth = now.getMonth();
+                      const currentYear = now.getFullYear();
 
-                          const parsed = Date.parse(r.deadline_pemesanan);
-                          if (!isNaN(parsed)) {
-                            const d = new Date(parsed);
-                            return (
-                              d.getMonth() === currentMonth &&
-                              d.getFullYear() === currentYear &&
-                              !r.PR &&
-                              !r.po &&
-                              !r.noPr
-                            );
-                          }
-                          return flagged && !r.PR && !r.po && !r.noPr;
-                        }))
+                      if (!r.deadline_pemesanan)
+                        return flagged && (!r.PR || sudahSelesai);
+
+                      const parsed = Date.parse(r.deadline_pemesanan);
+                      if (!isNaN(parsed)) {
+                        const d = new Date(parsed);
+                        return (
+                          d.getMonth() === currentMonth &&
+                          d.getFullYear() === currentYear &&
+                          flagged &&
+                          (!r.PR || sudahSelesai)
+                        );
+                      }
+
+                      return flagged && (!r.PR || sudahSelesai);
+                    }))
                       .filter(
                         (r) =>
                           (r.part || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -1633,11 +1672,25 @@ return;
                                   size="sm"
                                   onClick={() => {
                                     setShowListModal(null);
-                                    createPR(r);
+
+                                    const autoQty =
+                                      r["Qty Kebutuhan Selanjutnya"] ||
+                                      r["qty_kebutuhan_selanjutnya"] ||
+                                      r.qty_kebutuhan_selanjutnya ||
+                                      "";
+                                    const autoMonth =
+                                      (r["Untuk Bulan"] || r.untuk_bulan || "")
+                                        .toString()
+                                        .replace(/kebutuhan\s*/i, "")
+                                        .trim();
+
+                                    createPR({
+                                      ...r,
+                                      autoQty,
+                                      autoMonth,
+                                    });
                                   }}
-                                  disabled={
-                                    processingKey === (r.kodepart || r.part)
-                                  }
+                                  disabled={processingKey === (r.kodepart || r.part)}
                                 >
                                   Buat PR
                                 </Button>

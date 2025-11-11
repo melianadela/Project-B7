@@ -244,10 +244,31 @@ const linkedTracking = useMemo(() => {
 
 // --- Group logic: disesuaikan dengan internal ---
 const notStarted = useMemo(() => {
-  return rows.filter(r =>
-    (r.kanbanStatus === "not_started" ||
-      (r.status || "").toLowerCase().includes("segera pesan"))
-  );
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  return rows.filter(r => {
+    const status = (r.status || "").toLowerCase();
+    const deadline = r.deadline_pemesanan ? new Date(r.deadline_pemesanan) : null;
+
+    const isDueThisMonth = deadline
+      ? deadline.getMonth() === currentMonth && deadline.getFullYear() === currentYear
+      : false;
+
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const receiptDate = r.tanggal_receipt ? new Date(r.tanggal_receipt) : null;
+    const isOldCompleted = receiptDate && receiptDate < fourteenDaysAgo;
+
+    // tetap tampil kalau waktunya pesan lagi bulan ini (walaupun pernah complete)
+    return (
+      ((r.kanbanStatus === "not_started") ||
+        status.includes("segera pesan") ||
+        (status.includes("selesai") && isDueThisMonth)) &&
+      !isOldCompleted
+    );
+  });
 }, [rows]);
 
 const inProgress = useMemo(() => {
@@ -303,14 +324,16 @@ const completed = useMemo(() => {
       };
       const bulanFull = (matchBulan && bulanMap[matchBulan[0]]?.toString()) || matchBulan?.[0] || "";
 
-            // ambil otomatis dari kolom Qty & Bulan spreadsheet internal
-      const qtyDefault = r["Qty Kebutuhan Selanjutnya"] || r.qty || r.quantity || "";
-      const bulanDefault =
+      // ambil otomatis dari kolom Qty
+      const qtyDefault = r["Qty yang dipesan"] || r.qty || r.qty_yang_dipesan || "";
+      // ambil nama bulan dalam format panjang (contoh: "November")
+      const bulanDefault = (
         r["Untuk Bulan"] ||
         r.untuk_bulan ||
         (r.deadline_pemesanan
           ? new Date(r.deadline_pemesanan).toLocaleString("id-ID", { month: "long" })
-          : new Date().toLocaleString("id-ID", { month: "long" }));
+          : new Date().toLocaleString("id-ID", { month: "long" }))
+      ).toString().replace(/kebutuhan\s+bulan\s+/i, "").trim();
 
       setFormData({
         tanggal: new Date().toISOString().slice(0, 10),
@@ -652,31 +675,30 @@ const completed = useMemo(() => {
                       </div>
 
                       {r.status === "PR Dibuat" && (
-                        <Button size="sm" className="bg-blue-600 text-white" onClick={() => {
-                          // try to auto-fill leadtime from KANBAN_EKSTERNAL sheet (optional)
-                          (async () => {
-                            try {
-                              const response = await fetch(`/api/sheets?worksheet=KANBAN_EKSTERNAL`);
-                              const result = await response.json();
-                              let autoLeadtime = "";
-                              if (result.success && Array.isArray(result.data)) {
-                                const match = result.data.find((row: any) =>
-                                  (row.part || "").toString().toLowerCase() === (r.part || "").toString().toLowerCase() ||
-                                  (row.kodepart || "").toString().toLowerCase() === (r.kodepart || "").toString().toLowerCase()
-                                );
-                                autoLeadtime = match?.["lead_time_pengiriman_(hari)"] || match?.["lead time pengiriman (hari)"] || "";
-                              }
-                              setRowPO(r);
-                              setFormPO({ noPO: "", tanggalPO: "", leadtime: autoLeadtime || "", harga: "", eta: "" });
-                              setShowPOForm(true);
-                            } catch (err) {
-                              console.error("❌ Error fetching leadtime:", err);
-                              setRowPO(r);
-                              setFormPO({ noPO: "", tanggalPO: "", leadtime: "", harga: "", eta: "" });
-                              setShowPOForm(true);
-                            }
-                          })();
-                        }}>Input PO</Button>
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 text-white"
+                          onClick={() => {
+                            // langsung ambil nilai dari barisnya sendiri
+                            const autoLeadtime = 
+                              r["Leadtime (Hari)"] || 
+                              r["leadtime_(hari)"] || 
+                              r.leadtime_hari || 
+                              "";
+
+                            setRowPO(r);
+                            setFormPO({
+                              noPO: "",
+                              tanggalPO: "",
+                              leadtime: autoLeadtime, // ✅ langsung auto-isi
+                              harga: "",
+                              eta: ""
+                            });
+                            setShowPOForm(true);
+                          }}
+                        >
+                          Input PO
+                        </Button>
                       )}
 
                       {r.status === "PO Diajukan" && (
@@ -1053,11 +1075,30 @@ const completed = useMemo(() => {
                 <tbody>
                   {(showListModal === "total"
                     ? rows
-                    : rows.filter(
-                        (r) =>
-                          r.kanbanStatus === "not_started" ||
-                          (r.status || "").toLowerCase().includes("segera pesan")
-                      )
+                    : rows.filter((r) => {
+                        const status = (r.status || "").toLowerCase();
+                        const deadline = r.deadline_pemesanan ? new Date(r.deadline_pemesanan) : null;
+
+                        const now = new Date();
+                        const currentMonth = now.getMonth();
+                        const currentYear = now.getFullYear();
+
+                        const isDueThisMonth = deadline
+                          ? deadline.getMonth() === currentMonth && deadline.getFullYear() === currentYear
+                          : false;
+
+                        const fourteenDaysAgo = new Date();
+                        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+                        const receiptDate = r.tanggal_receipt ? new Date(r.tanggal_receipt) : null;
+                        const isOldCompleted = receiptDate && receiptDate < fourteenDaysAgo;
+
+                        return (
+                          ((r.kanbanStatus === "not_started") ||
+                            status.includes("segera pesan") ||
+                            (status.includes("selesai") && isDueThisMonth)) &&
+                          !isOldCompleted
+                        );
+                      })
                   )
                     .filter(
                       (r) =>
