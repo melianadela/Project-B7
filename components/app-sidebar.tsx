@@ -9,6 +9,7 @@ import {
   KanbanSquare,
   Users,
   Wrench,
+  ClipboardCheck,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -503,17 +504,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* CMMS Section */}
+        {/* Pemakaian Section */}
         <div className="mb-2"></div>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full justify-between hover:bg-muted">
-                  <div className="flex items-center gap-4">
-                    <Wrench className="w-8 h-8" />
-                    <span className="text-2xl font-bold">CMMS</span>
-                  </div>
+                <SidebarMenuButton
+                  asChild
+                  className="w-full justify-between hover:bg-muted"
+                >
+                  <Link href="/dashboard/pemakaian">
+                    <div className="flex items-center gap-4">
+                      <ClipboardCheck className="w-8 h-8" />
+                      <span className="text-lg font-bold leading-tight text-left whitespace-normal break-words">
+                        Pemakaian Kanban Eksternal
+                      </span>
+                    </div>
+
+                    {/* ikon panah pindah ke kanan, tidak bikin layout pecah */}
+                    <ChevronRight className="size-4 opacity-60" />
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
