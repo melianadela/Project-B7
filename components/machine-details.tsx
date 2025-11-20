@@ -153,7 +153,7 @@ function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-6">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative max-w-5xl w-full bg-white dark:bg-slate-900 rounded shadow-lg overflow-auto max-h-[85vh]">
+      <div className="relative w-full max-w-[95vw] bg-white dark:bg-slate-900 rounded-xl shadow-xl overflow-auto max-h-[85vh] p-2">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="text-lg font-medium">{title}</h3>
           <Button
@@ -281,65 +281,92 @@ export function MachineStatsCards({
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Total */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 ">
+        {/* TOTAL */}
         <Card
           onClick={() => showModalWith("Semua Spare Part", [], onTotalClick)}
-          className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
+          className={`
+            cursor-pointer p-6 rounded-2xl shadow-lg 
+            bg-gradient-to-br from-sky-500 to-blue-600 text-white
+            transition-all duration-300 transform hover:scale-[1.03]
+            hover:shadow-xl border border-white/10 dark:border-white/5
+          `}
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Total Spare Part Terpantau</h3>
-            <Wrench className="w-15 h-15 text-gray-500" />
+            <h3 className="text-2xl font-bold drop-shadow-sm">
+              Total Spare Part Terpantau
+            </h3>
+            <Wrench className="w-14 h-14 text-white/70" />
           </div>
-          <div className="mt-4 text-6xl font-bold">
+
+          <div className="mt-4 text-6xl font-extrabold drop-shadow-sm">
             {stats.total}
-            <span className="ml-2 text-xl font-normal text-gray-500">Item</span>
+            <span className="ml-2 text-xl font-medium text-white/80">Item</span>
           </div>
         </Card>
 
-        {/* Expiring Soon */}
-        <Card
-          onClick={() => showModalWith("Spare part Akan Habis Umur", [], onExpiringClick)}
-          className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
-        >
-          <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Spare Part Akan Habis Umur</h3>
-            <Clock className="w-15 h-15 text-gray-500" />
-          </div>
-          <p className="text-sm md:text-base lg:text-lg text-gray-700">&lt; 14 hari</p>
-          <div className="mt-2 text-6xl font-bold">
-            {stats.expiringSoon}
-            <span className="ml-2 text-xl font-normal text-gray-500">Item</span>
-          </div>
-        </Card>
+      {/* EXPIRING */}
+      <Card
+        onClick={() => showModalWith("Spare Part Akan Habis Umur", [], onExpiringClick)}
+        className={`
+          cursor-pointer p-6 rounded-2xl shadow-lg
+          bg-gradient-to-br from-yellow-400 to-amber-500
+          transition-all duration-300 transform hover:scale-[1.03]
+          hover:shadow-xl border border-white/10 dark:border-white/5
+          text-white
+        `}
+      >
+        <div className="flex justify-between items-center">
+          <h3 className="text-2xl font-bold drop-shadow-sm">
+            Spare Part Akan Habis Umur
+          </h3>
+          <Clock className="w-14 h-14 text-white/70" />
+        </div>
+        <div className="mt-2 text-6xl font-extrabold drop-shadow-sm">
+          {stats.expiringSoon}
+          <span className="ml-2 text-xl font-medium text-white/80">Item</span>
+        </div>
+      </Card>
 
-        {/* Overdue */}
+        {/* OVERDUE */}
         <Card
-          onClick={() => showModalWith("Spare part Overdue", [], onOverdueClick)}
-          className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
+          onClick={() => showModalWith("Spare Part Overdue", [], onOverdueClick)}
+          className={`
+            cursor-pointer p-6 rounded-2xl shadow-lg 
+            bg-gradient-to-br from-red-500 to-red-700 text-white
+            transition-all duration-300 transform hover:scale-[1.03]
+            hover:shadow-xl border border-white/10 dark:border-white/5
+          `}
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Spare Part Overdue</h3>
-            <AlertTriangle className="w-15 h-15 text-gray-500" />
+            <h3 className="text-2xl font-bold drop-shadow-sm">Spare Part Overdue</h3>
+            <AlertTriangle className="w-14 h-14 text-white/70" />
           </div>
-          <div className="mt-4 text-6xl font-bold">
+
+          <div className="mt-4 text-6xl font-extrabold drop-shadow-sm">
             {stats.overdue}
-            <span className="ml-2 text-xl font-normal text-gray-500">Item</span>
+            <span className="ml-2 text-xl font-medium text-white/80">Item</span>
           </div>
         </Card>
 
         {/* OK */}
         <Card
           onClick={() => showModalWith("Spare part OK", [], onOkClick)}
-          className="cursor-pointer transition hover:scale-105 active:scale-95 hover:shadow-lg rounded-2xl p-6 flex flex-col justify-between"
+          className={`
+            cursor-pointer p-6 rounded-2xl shadow-lg 
+            bg-gradient-to-br from-green-500 to-emerald-600 text-white
+            transition-all duration-300 transform hover:scale-[1.03]
+            hover:shadow-xl border border-white/10 dark:border-white/5
+          `}
         >
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Spare Part Aktif (OK)</h3>
-            <CheckCircle className="w-15 h-15 text-gray-500" />
+            <h3 className="text-2xl font-bold drop-shadow-sm">Spare Part Aktif (OK)</h3>
+            <CheckCircle className="w-14 h-14 text-white/70" />
           </div>
-          <div className="mt-4 text-6xl font-bold">
+
+          <div className="mt-4 text-6xl font-extrabold drop-shadow-sm">
             {stats.ok}
-            <span className="ml-2 text-xl font-normal text-gray-500">Item</span>
+            <span className="ml-2 text-xl font-medium text-white/80">Item</span>
           </div>
         </Card>
       </div>

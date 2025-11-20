@@ -235,25 +235,42 @@ const LifetimeOverviewPage: React.FC = () => {
           <ResponsiveContainer>
             <PieChart>
               <Pie
-  data={distribution.map((item) => ({
-    name: item.name,
-    value: item.value,
-    color: colorMap[item.color] || "#6b7280",
-  }))}
-  dataKey="value"
-  nameKey="name"
-  outerRadius={120}
-  label={renderLabel}   // ✅ sekarang aman
->
+                data={distribution.map((item) => ({
+                  name: item.name,
+                  value: item.value,
+                  color: colorMap[item.color] || "#6b7280",
+                }))}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={70}       
+                outerRadius={140}
+                paddingAngle={3}
+              >
+                {distribution.map((item, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={colorMap[item.color] || "#6b7280"}
+                  />
+                ))}
+              </Pie>
 
-  {distribution.map((item, index) => (
-    <Cell
-      key={`cell-${index}`}
-      fill={colorMap[item.color] || "#6b7280"}
-    />
-  ))}
-</Pie>
-              <Tooltip formatter={(value: number) => [`${value} Sparepart`, "Jumlah"]} />
+              {/* 🔥 Tooltip custom: munculin persentase saat hover */}
+              <Tooltip
+                content={({ payload }) => {
+                  if (!payload || payload.length === 0) return null;
+                  const entry = payload[0];
+                  const total = distribution.reduce((s, d) => s + d.value, 0);
+                  const percent = ((entry.value / total) * 100).toFixed(1);
+
+                  return (
+                    <div className="bg-white dark:bg-slate-800 text-sm p-2 rounded shadow-lg border border-gray-200 dark:border-gray-700">
+                      <div className="font-semibold">{entry.name}</div>
+                      <div>{entry.value} item</div>
+                      <div className="text-blue-600 dark:text-blue-400">{percent}%</div>
+                    </div>
+                  );
+                }}
+              />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

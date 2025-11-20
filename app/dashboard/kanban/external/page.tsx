@@ -897,7 +897,11 @@ return;
         {/* Total Spare part */}
         <Card
           onClick={() => setShowListModal("total")}
-          className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:bg-blue-100 dark:hover:bg-blue-800/40 active:scale-95"
+          className="bg-white dark:bg-slate-900 
+             border border-gray-200 dark:border-gray-700 
+             rounded-xl shadow-sm cursor-pointer
+             transition-all duration-200 ease-out 
+             hover:-translate-y-1 hover:shadow-md active:scale-95"
         >
           <CardContent>
             <div className="text-sm text-slate-600 dark:text-slate-300">
@@ -910,7 +914,11 @@ return;
         {/* Part Harus Dipesan */}
         <Card
           onClick={() => setShowListModal("harusDipesan")}
-          className="bg-red-50 border-red-200 dark:bg-red-900/20 cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:bg-red-100 dark:hover:bg-red-800/40 active:scale-95"
+          className="bg-white dark:bg-slate-900 
+             border border-gray-200 dark:border-gray-700 
+             rounded-xl shadow-sm cursor-pointer
+             transition-all duration-200 ease-out 
+             hover:-translate-y-1 hover:shadow-md active:scale-95"
         >
           <CardContent>
             <div className="text-sm text-slate-600 dark:text-slate-300">
@@ -923,15 +931,19 @@ return;
         {/* 🟢 Monitoring Kanban */}
         <Card
           onClick={() => setTab("monitoring")}
-          className="bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:bg-emerald-100 dark:hover:bg-emerald-800/40 active:scale-95"
+          className="bg-white dark:bg-slate-900 
+             border border-gray-200 dark:border-gray-700 
+             rounded-xl shadow-sm cursor-pointer
+             transition-all duration-200 ease-out 
+             hover:-translate-y-1 hover:shadow-md active:scale-95"
         >
           <CardContent>
             <div className="text-sm text-slate-600 dark:text-slate-300">
               Monitoring Kanban
             </div>
-            <div className="text-2xl font-bold text-emerald-700 flex items-center gap-2">
+            <div className="text-2xl font-bold">
               📊
-              <span className="text-base font-medium text-emerald-700">
+              <span className="text-base font-medium">
                 Lihat Status PR & PO
               </span>
             </div>

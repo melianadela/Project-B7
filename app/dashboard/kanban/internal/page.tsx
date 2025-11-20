@@ -607,7 +607,11 @@ const completed = useMemo(() => {
       <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Kanban Internal</h1>
 
       <div className="grid grid-cols-3 gap-4">
-        <Card className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:bg-blue-100 dark:hover:bg-blue-800/40 active:scale-95" 
+        <Card className="bg-white dark:bg-slate-900 
+             border border-gray-200 dark:border-gray-700 
+             rounded-xl shadow-sm cursor-pointer
+             transition-all duration-200 ease-out 
+             hover:-translate-y-1 hover:shadow-md active:scale-95" 
               onClick={() => setShowListModal("total")}>
           <CardContent>
             <div className="text-sm text-slate-600 dark:text-slate-300">Total Sparepart Terpantau</div>
@@ -615,7 +619,11 @@ const completed = useMemo(() => {
           </CardContent>
         </Card>
 
-        <Card className="bg-red-50 border-red-200 dark:bg-red-900/20 cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:bg-red-100 dark:hover:bg-red-800/40 active:scale-95" 
+        <Card className="bg-white dark:bg-slate-900 
+             border border-gray-200 dark:border-gray-700 
+             rounded-xl shadow-sm cursor-pointer
+             transition-all duration-200 ease-out 
+             hover:-translate-y-1 hover:shadow-md active:scale-95" 
               onClick={() => setShowListModal("harusDipesan")}>
           <CardContent>
             <div className="text-sm text-slate-600 dark:text-slate-300">Part Harus Dipesan Bulan Ini</div>
@@ -623,11 +631,15 @@ const completed = useMemo(() => {
           </CardContent>
         </Card>
 
-        <Card className="bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:bg-emerald-100 dark:hover:bg-emerald-800/40 active:scale-95"
+        <Card className="bg-white dark:bg-slate-900 
+             border border-gray-200 dark:border-gray-700 
+             rounded-xl shadow-sm cursor-pointer
+             transition-all duration-200 ease-out 
+             hover:-translate-y-1 hover:shadow-md active:scale-95"
               onClick={() => setTab("monitoring")}>
           <CardContent>
             <div className="text-sm text-slate-600 dark:text-slate-300">Monitoring Kanban</div>
-            <div className="text-2xl font-bold text-emerald-700">📊 <span className="text-base font-medium">Lihat Status PR & PO</span></div>
+            <div className="text-2xl font-bold">📊 <span className="text-base font-medium">Lihat Status PR & PO</span></div>
           </CardContent>
         </Card>
       </div>
