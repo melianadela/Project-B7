@@ -1100,7 +1100,7 @@ const completed = useMemo(() => {
                           : false;
 
                         const fourteenDaysAgo = new Date();
-                        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+                        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 30);
                         const receiptDate = r.tanggal_receipt ? new Date(r.tanggal_receipt) : null;
                         const isOldCompleted = receiptDate && receiptDate < fourteenDaysAgo;
 
