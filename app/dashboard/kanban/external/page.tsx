@@ -341,7 +341,7 @@ export default function KanbanExternalPage() {
         if (tanggalReceipt) {
           const d = new Date(tanggalReceipt);
           const diffDays = (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24);
-          if (diffDays > 14) return false;
+          if (diffDays > 30) return false;
         }
         return true;
       }),

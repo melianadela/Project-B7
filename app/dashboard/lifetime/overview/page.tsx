@@ -69,9 +69,9 @@ const LifetimeOverviewPage: React.FC = () => {
     return `${name} (${((percent ?? 0) * 100).toFixed(1)}%)`;
   };
   const colorMap: Record<string, string> = {
-    "from-red-500 to-red-700": "#ef4444ff", // merah
-    "from-yellow-400 to-amber-500": "#facc15", // kuning
-    "from-green-500 to-emerald-600": "#22c55e", // hijau
+    "from-red-500 to-red-700": "#e42b2bff", // merah
+    "from-yellow-400 to-amber-500": "#f5ff34ff", // kuning
+    "from-green-500 to-emerald-600": "#11f611ff", // hijau
   };
 
   useEffect(() => {

@@ -3,7 +3,6 @@
 
 import { Wrench, Clock, AlertTriangle, CheckCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Pie, PieChart, Cell } from "recharts";
 import {
   Card,
   CardContent,
@@ -43,6 +42,15 @@ import { BorderBeam } from "./magicui/border-beam";
 import { Printer } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend
+} from "recharts";
+
 
 interface Sparepart {
   mesin: string;
@@ -439,58 +447,84 @@ export function OverdueTable({ data, showMachine = false }: OverdueTableProps) {
   );
 }
 
-/* --- PieChartDistribution --- */
+/* --- PieChartDistribution (Donut Chart Elegan) --- */
 export function PieChartDistribution({ data }: PieChartDistributionProps) {
-  const COLORS = ["#f5ff34ff", "#e42b2bff", "#11f611ff", "#FF8042"];
-  const chartConfig = {
-    sparepart: { label: "Spare part", color: "#CCCCCC" },
-    "Spare part yang akan habis umur": { label: "Spare part yang akan habis umur", color: COLORS[0] },
-    "Spare part overdue": { label: "Spare part overdue", color: COLORS[1] },
-    "Spare part OK": { label: "Spare part OK", color: COLORS[2] },
-  } as unknown as ChartConfig;
+  const COLORS = ["#e42b2bff", "#f5ff34ff", "#11f611ff"];
 
-  const validData = data.filter((d) => d.value > 0).map((d) => ({ ...d, fill: chartConfig[d.name as keyof typeof chartConfig]?.color || "#CCCCCC" }));
+  // pastikan hasil map sesuai urutan data kamu:
+  const orderedNames = [
+    "Spare part overdue",
+    "Spare part yang akan habis umur",
+    "Spare part OK",
+  ];
+
+  const validData = orderedNames
+    .map((name) => data.find((d) => d.name === name))
+    .filter(Boolean)
+    .map((d, i) => ({
+      ...d!,
+      fill: COLORS[i],
+    }));
 
   return (
-  <Card className="w-[1200px] h-[450px]">
-    <CardHeader className="items-center pb-0">
-      <CardTitle className="text-xl md:text-2xl font-bold tracking-tight">
-        Distribusi Spare part
-      </CardTitle>
-      <CardDescription className="text-sm md:text-lg text-gray-500 dark:text-gray-400">
-        Berdasarkan status umur spare part
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="flex items-center justify-center">
-      {validData.length > 0 ? (
-        <ChartContainer
-          config={chartConfig}
-          className="w-[500px] h-[300px]"  // 👈 bikin fix height & width
-        >
-          <PieChart>
-            <Pie
-              data={validData}
-              dataKey="value"
-              innerRadius={60}
-              outerRadius={120}
-              paddingAngle={0}
-            >
-              {validData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.fill} />
-              ))}
-            </Pie>
-            <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-            <ChartLegend content={<ChartLegendContent nameKey="name" className="text-base font-medium" />} />
-          </PieChart>
-        </ChartContainer>
-      ) : (
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">Tidak ada data untuk ditampilkan</p>
-        </div>
-      )}
-    </CardContent>
-  </Card>
-);
+    <Card className="w-[1200px] h-[450px]">
+      <CardHeader className="items-center pb-0">
+        <CardTitle className="text-xl md:text-2xl font-bold tracking-tight">
+          Distribusi Spare part
+        </CardTitle>
+        <CardDescription className="text-sm md:text-lg text-gray-500 dark:text-gray-400">
+          Berdasarkan status umur spare part
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="flex items-center justify-center">
+        {validData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={validData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={70}
+                outerRadius={120}
+                paddingAngle={0}
+              >
+                {validData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Pie>
+
+              {/* Tooltip yang baru muncul pas hover */}
+              <Tooltip
+                content={({ payload }) => {
+                  if (!payload || payload.length === 0) return null;
+                  const entry = payload[0];
+                  const total = validData.reduce((a, b) => a + b.value, 0);
+                  const percent = ((entry.value / total) * 100).toFixed(1);
+
+                  return (
+                    <div className="bg-white dark:bg-slate-800 text-sm p-2 rounded shadow-lg border border-gray-300 dark:border-gray-700">
+                      <div className="font-semibold">{entry.name}</div>
+                      <div>{entry.value} item</div>
+                      <div className="text-blue-600 dark:text-blue-400">
+                        {percent}%
+                      </div>
+                    </div>
+                  );
+                }}
+              />
+
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-500">Tidak ada data untuk ditampilkan</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 /* --- Spare partTable (with export PDF) --- */

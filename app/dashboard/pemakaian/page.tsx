@@ -39,7 +39,7 @@ export default function PemakaianPage() {
       const months = Array.from(
         new Set(
           rows
-            .map((r) => (r.tanggal ? r.tanggal.substring(0, 7) : ""))
+            .map((r) => (r.tanggal ? r.tanggal.substring(0, 10) : ""))
             .filter(Boolean)
         )
       );
@@ -144,7 +144,7 @@ export default function PemakaianPage() {
                 <SelectItem
                   key={b}
                   value={b}
-                  className="whitespace-nowrap max-w-none !overflow-visible"
+                  className="whitespace-normal !overflow-visible !truncate-none"
                 >
                   {b}
                 </SelectItem>
