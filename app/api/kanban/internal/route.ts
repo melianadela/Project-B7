@@ -2,19 +2,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { google } from "googleapis";
 
-/**
- * API untuk KANBAN_INTERNAL
- * - GET: ambil data KANBAN_INTERNAL, process header dinamis, merge dengan KANBAN_TRACKING (tracking PR/PO)
- * - POST: buat PR baru → tulis ke KANBAN_TRACKING (sama flow eksternal)
- * - PATCH: update PR (PO / tanggal PO / harga / leadtime / ETA / Receipt / status) pada KANBAN_TRACKING
- *
- * Kolom final KANBAN_INTERNAL (urut):
- * Kode Part | Part | Mesin | Category | Leadtime (Hari) | On Hand Inventory |
- * Reorder Min | Reorder Max | Qty Kebutuhan Reorder | Qty Kebutuhan Selanjutnya |
- * Untuk Bulan | Status | Deadline Pemesanan | Qty yang dipesan | Supplier
- */
-
-// --- Interface minimal untuk row internal/tracking ---
 interface KanbanRow {
   __sheetRow?: number;
   kodepart?: string;
@@ -211,6 +198,39 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const payload = body.payload ?? body;
     const sheets = createSheetsClient();
+
+  // 🔍 DETEKSI INPUT PEMAKAIAN (lebih kuat & compatible)
+  const isPemakaian =
+    payload?.formType === "pemakaian" ||
+    typeof payload.qty_pemakaian !== "undefined";
+
+  if (isPemakaian) {
+    const now = new Date();
+    const tanggal = payload.tanggal || now.toISOString().split("T")[0];
+
+    const values = [
+      tanggal,                                 // A
+      "INTERNAL",                               // B
+      payload.kode_part || payload.kodepart || "", // C
+      payload.part || "",                       // D
+      payload.qty_pemakaian || "",              // E
+      payload.keterangan || "",                 // F
+      payload.operator || "",                   // G
+    ];
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: process.env.sheet_id!,
+      range: `PEMAKAIAN_SPAREPART!A:G`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { values: [values] },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Pencatatan pemakaian berhasil disimpan",
+      values,
+    });
+  }
 
     // Build values according to KANBAN_TRACKING columns (A: Tanggal, B: PR, C: Tanggal PR, D: PO, E: Tanggal PO, F: Tipe Kanban, G: Kode Part, H: Part, ... up to U)
     const values = [

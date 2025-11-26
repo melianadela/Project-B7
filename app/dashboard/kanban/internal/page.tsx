@@ -487,14 +487,14 @@ const completed = useMemo(() => {
     try {
       const payload = {
         payload: {
-          Tanggal: formPemakaian.tanggal,
-          "Tipe Kanban": formPemakaian.tipe_kanban,
-          "Kode Part": formPemakaian.kode_part,
-          Part: formPemakaian.part,
-          "Qty Pemakaian": formPemakaian.qty_pemakaian,
-          Keterangan: formPemakaian.keterangan,
-          Operator: formPemakaian.operator,
-        }
+          tanggal: formPemakaian.tanggal,
+          tipe_kanban: formPemakaian.tipe_kanban,
+          kode_part: formPemakaian.kode_part,
+          part: formPemakaian.part,
+          qty_pemakaian: formPemakaian.qty_pemakaian,
+          keterangan: formPemakaian.keterangan,
+          operator: formPemakaian.operator,
+        },
       };
       const res = await fetch("/api/kanban", {
         method: "POST",

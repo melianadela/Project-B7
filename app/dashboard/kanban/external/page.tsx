@@ -213,6 +213,12 @@ export default function KanbanExternalPage() {
           status: r.status ?? r.Status ?? r.status_pemesanan ?? r.Status_Pemesanan ?? "",
           status_pemesanan: r.status_pemesanan ?? "", 
           deadline_pemesanan: r.deadline_pemesanan ?? r.deadline ?? r.Deadline ?? "",
+          leadtime_pengiriman: 
+            r["Lead time Pengiriman (hari)"] ??
+            r["lead_time_pengiriman_(hari)"] ??
+            r.lead_time_pengiriman ??
+            r.leadtime ??
+            "",
           kanbanStatus: r.kanbanStatus ?? r.kanban_status ?? undefined,
 
           // ✅ tambahan mapping inventory
@@ -1004,19 +1010,20 @@ return;
 
                         {r.status === "PR Dibuat" && (
                           <Button
-                            size="sm"
-                            className="bg-blue-600 text-white"
+                            className="bg-blue-600"
                             onClick={() => {
-                              setRowPO(r);
-                              setFormPO({
-                                noPO: "",
-                                tanggalPO: "",
-                                leadtime: "",
-                                harga: "",
-                                eta: "",
-                              });
-                              setShowPOForm(true);
-                            }}
+                                const autoLeadtime =
+                                  r.lead_time_pengiriman_hari || "";
+                                setRowPO(r);
+                                setFormPO({
+                                  noPO: "",
+                                  tanggalPO: "",
+                                  leadtime: autoLeadtime,  // ← SEKARANG AUTO-TERISI
+                                  harga: "",
+                                  eta: "",
+                                });
+                                setShowPOForm(true);
+                          }}
                           >
                             Input PO
                           </Button>
