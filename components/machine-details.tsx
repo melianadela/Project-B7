@@ -289,15 +289,16 @@ export function MachineStatsCards({
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 ">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         {/* TOTAL */}
         <Card
           onClick={() => showModalWith("Semua Spare Part", [], onTotalClick)}
           className={`
             cursor-pointer p-6 rounded-2xl shadow-lg 
-            bg-gradient-to-br from-sky-500 to-blue-600 text-white
-            transition-all duration-300 transform hover:scale-[1.03]
-            hover:shadow-xl border border-white/10 dark:border-white/5
+    bg-gradient-to-br from-sky-500 to-blue-600 text-white
+    transition-all duration-300 transform hover:scale-[1.03]
+    hover:shadow-xl border border-white/10 dark:border-white/5
+    min-h-[170px]
           `}
         >
           <div className="flex justify-between items-center">
@@ -321,7 +322,7 @@ export function MachineStatsCards({
           bg-gradient-to-br from-yellow-400 to-amber-500
           transition-all duration-300 transform hover:scale-[1.03]
           hover:shadow-xl border border-white/10 dark:border-white/5
-          text-white
+          text-white min-h-[170px]
         `}
       >
         <div className="flex justify-between items-center">
@@ -343,7 +344,7 @@ export function MachineStatsCards({
             cursor-pointer p-6 rounded-2xl shadow-lg 
             bg-gradient-to-br from-red-500 to-red-700 text-white
             transition-all duration-300 transform hover:scale-[1.03]
-            hover:shadow-xl border border-white/10 dark:border-white/5
+            hover:shadow-xl border border-white/10 dark:border-white/5 min-h-[170px]
           `}
         >
           <div className="flex justify-between items-center">
@@ -364,7 +365,7 @@ export function MachineStatsCards({
             cursor-pointer p-6 rounded-2xl shadow-lg 
             bg-gradient-to-br from-green-500 to-emerald-600 text-white
             transition-all duration-300 transform hover:scale-[1.03]
-            hover:shadow-xl border border-white/10 dark:border-white/5
+            hover:shadow-xl border border-white/10 dark:border-white/5 min-h-[170px]
           `}
         >
           <div className="flex justify-between items-center">

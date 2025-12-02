@@ -138,25 +138,29 @@ if (normalized.includes("genset")) {
 }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-14 pt-6">
       <h1 className="text-3xl font-bold">{machineName}</h1>
 
-      <MachineStatsCards
-        worksheet={worksheetName}
-        machine={machineName}
-        // pass handlers yang akan menampilkan modal (modal dikelola internal di komponen)
-        onTotalClick={(showCb) => showCb(machineSpareparts)}
-        onExpiringClick={(showCb) => showCb(nearEndOfLife)}
-        onOverdueClick={(showCb) => showCb(overdueSpareparts)}
-        onOkClick={(showCb) => showCb(okSpareparts)}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
 
-      <div className="mt-10">
-        <h3 className="mb-5 text-2xl font-semibold">Distribution Spare parts</h3>
-        <div className="flex justify-center">
-          <PieChartDistribution data={sparepartDistribution} />
-        </div>
-      </div>
+  {/* LEFT — Summary Cards */}
+  <div>
+    <MachineStatsCards
+      worksheet={worksheetName}
+      machine={machineName}
+      onTotalClick={(showCb) => showCb(machineSpareparts)}
+      onExpiringClick={(showCb) => showCb(nearEndOfLife)}
+      onOverdueClick={(showCb) => showCb(overdueSpareparts)}
+      onOkClick={(showCb) => showCb(okSpareparts)}
+    />
+  </div>
+
+  {/* RIGHT — Pie Chart */}
+  <div className="flex items-center justify-center">
+    <PieChartDistribution data={sparepartDistribution} />
+  </div>
+</div>
+
     </div>
   );
 }
