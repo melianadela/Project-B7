@@ -1010,7 +1010,7 @@ return;
 
                         {r.status === "PR Dibuat" && (
                           <Button
-                            className="bg-blue-600"
+                            className="bg-blue-600 text-white"
                             onClick={() => {
                                 const autoLeadtime =
                                   r.lead_time_pengiriman_hari || "";
