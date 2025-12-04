@@ -17,33 +17,33 @@ export default function Footer() {
             className="underline hover:text-black transition-colors font-medium"
             href="https://www.linkedin.com/in/putri-amanda-khairunnisa/"
           >
-            Amanda
+            Amanda,
           </Link>
-          ,
+          
           <Link
             className="underline hover:text-black transition-colors font-medium"
             href="https://www.linkedin.com/in/armelia-agustin/"
           >
-            Armelia
+            Armelia,
           </Link>
-          ,
+          
           <Link
             className="underline hover:text-black transition-colors font-medium"
             href="https://www.linkedin.com/in/danang-hapis-fadillah-682878202/"
           >
-            Danang
+            Danang,
           </Link>
-          ,
+          
           <Link
             className="underline hover:text-black transition-colors font-medium"
-            href="https://www.instagram.com/melianadsh?igsh=MWpranhrdGM5M3d0Mg%3D%3D&utm_source=qr"
+            href="https://www.linkedin.com/in/melianadela/"
           >
-            Eli
+            Eli,
           </Link>
-          , and
+          and
           <Link
             className="underline hover:text-black transition-colors font-medium"
-            href="https://www.instagram.com/nadyaa.ka?igsh=MWRoMmR0Znh3eHRtNQ=="
+            href="https://www.linkedin.com/in/nadyakartikaa/"
           >
             Nadya
           </Link>

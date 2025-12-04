@@ -148,9 +148,9 @@ export default function KanbanInternalPage() {
           kanbanStatus: r.kanbanStatus ?? r.kanban_status ?? undefined,
 
           // internal-specific inventory fields (if any)
-          kebutuhan_per_tahun: r.kebutuhan_per_tahun ?? r.KebutuhanPerTahun ?? r["Kebutuhan Per Tahun"] ?? "",
-          safety_stock: r.safety_stock ?? r.SafetyStock ?? r["Safety Stock"] ?? "",
-          total_kebutuhan: r.total_kebutuhan ?? r.TotalKebutuhan ?? r["Total Kebutuhan"] ?? "",
+          leadtime_hari:r["Leadtime (Hari)"] ?? r.leadtime_hari ?? r.Leadtime ?? "",
+          reorder_min:r["Reorder Min"] ?? r.reorder_min ?? r.ReorderMin ?? "",
+          reorder_max:r["Reorder Max"] ?? r.reorder_max ?? r.ReorderMax ?? "",
           on_hand_inventory: r.on_hand_inventory ?? r.OnHandInventory ?? r["On Hand Inventory"] ?? "",
 
           ...r,
@@ -528,15 +528,15 @@ const completed = useMemo(() => {
   // ----------------- Exports -----------------
   const exportExcel = () => {
     const header = [
-      "Part", "Kode Part", "Kebutuhan Per Tahun", "Safety Stock", "Total Kebutuhan", "On Hand Inventory", "Vendor"
+      "Part", "Kode Part", "Leadtime (Hari)", "Reorder Min", "Reorder Max", "On Hand Inventory", "Vendor"
     ];
 
     const data = rows.map((row) => [
       row.part || "-",
       row.kodepart || "-",
-      row.kebutuhan_per_tahun || "-",
-      row.safety_stock || "-",
-      row.total_kebutuhan || "-",
+      row.leadtime_hari || "-",
+      row.reorder_min || "-",
+      row.reorder_max || "-",
       row.on_hand_inventory || "-",
       row.vendor || "-",
     ]);
@@ -550,13 +550,13 @@ const completed = useMemo(() => {
 
   const exportPDF = () => {
     const doc = new jsPDF("l", "pt", "a4");
-    const tableColumn = ["Part","Kode Part","Kebutuhan Per Tahun","Safety Stock","Total Kebutuhan","On Hand Inventory","Vendor"];
+    const tableColumn = ["Part","Kode Part","Leadtime (Hari)", "Reorder Min", "Reorder Max","On Hand Inventory","Vendor"];
     const tableRows = rows.map((row) => [
       row.part || "-",
       row.kodepart || "-",
-      row.kebutuhan_per_tahun || "-",
-      row.safety_stock || "-",
-      row.total_kebutuhan || "-",
+      row.leadtime_hari || "-",
+      row.reorder_min || "-",
+      row.reorder_max || "-",
       row.on_hand_inventory || "-",
       row.vendor || "-",
     ]);
@@ -1076,9 +1076,9 @@ const completed = useMemo(() => {
                   <tr>
                     <th className="px-3 py-2 text-center">Part</th>
                     <th className="px-3 py-2 text-center">Kode Part</th>
-                    <th className="px-3 py-2 text-center">Kebutuhan Per Tahun</th>
-                    <th className="px-3 py-2 text-center">Safety Stock</th>
-                    <th className="px-3 py-2 text-center">Total Kebutuhan</th>
+                    <th className="px-3 py-2 text-center">Leadtime (Hari)</th>
+                    <th className="px-3 py-2 text-center">Reorder Min</th>
+                    <th className="px-3 py-2 text-center">Reorder Max</th>
                     <th className="px-3 py-2 text-center">On Hand Inventory</th>
                     <th className="px-3 py-2 text-center">Vendor</th>
                     <th className="px-3 py-2 text-center">Aksi</th>
@@ -1127,13 +1127,13 @@ const completed = useMemo(() => {
                         <td className="px-3 py-2">{r.part}</td>
                         <td className="px-3 py-2">{r.kodepart}</td>
                         <td className="px-3 py-2 text-center">
-                          {r.kebutuhan_per_tahun || "-"}
+                          {r.leadtime_hari || "-"}
                         </td>
                         <td className="px-3 py-2 text-center">
-                          {r.safety_stock || "-"}
+                          {r.reorder_min || "-"}
                         </td>
                         <td className="px-3 py-2 text-center">
-                          {r.total_kebutuhan || "-"}
+                          {r.reorder_max || "-"}
                         </td>
                         <td className="px-3 py-2 text-center">
                           {r.on_hand_inventory || "-"}
