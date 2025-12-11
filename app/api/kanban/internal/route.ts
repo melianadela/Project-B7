@@ -127,13 +127,15 @@ export async function GET(request: NextRequest) {
         (row.kodepart || row["kode_part"] || row["kode_part"] || row["kode_part"] || row["kode_part"] || "").toString().trim();
 
       // find tracking row with matching kodepart or part (case-insensitive)
-      const track = processedTracking.normalized.find(
+      const trackList = processedTracking.normalized.filter(
         (t) =>
           ((t.kodepart || t["kode_part"] || t.KodePart || "") + "")
-            .toString()
             .trim()
             .toLowerCase() === kodePart.toLowerCase()
       );
+
+      // ambil PR paling bawah (paling terbaru)
+      const track = trackList.length > 0 ? trackList[trackList.length - 1] : null;
 
             // 🧠 Tentukan status Kanban berdasarkan data internal + tracking
       let kanbanStatus = "ignore";

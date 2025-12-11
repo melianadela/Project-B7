@@ -232,9 +232,10 @@ export default function KanbanExternalPage() {
           tanggal_receipt: r.tanggal_receipt ?? r.TanggalReceipt ?? "",
           no_receipt: r.no_receipt ?? r.NoReceipt ?? "",
         };
+        
         return mapped;
       });
-
+      
       // filter header-like rows / empty kodepart
       const filtered = normalized.filter((r: KanbanRow) => {
         const k = (r.kodepart || "").toString().trim().toLowerCase();
@@ -1312,13 +1313,9 @@ return;
                 <label className="text-sm font-medium">Vendor *</label>
                 <input
                   type="text"
-                  className="w-full border rounded px-2 py-1 
-                            bg-gray-100 dark:bg-slate-700 
-                            border-gray-300 dark:border-slate-600 
-                            text-slate-900 dark:text-slate-100 
-                            cursor-not-allowed"
+                  className="w-full border rounded px-2 py-1"
                   value={formData.vendor}
-                  readOnly
+                  onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
                 />
               </div>
               <div>

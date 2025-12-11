@@ -899,7 +899,7 @@ const completed = useMemo(() => {
               </div>
               <div>
                 <label className="text-sm font-medium">Vendor *</label>
-                <input type="text" readOnly value={formData.vendor} className="w-full border rounded px-2 py-1 bg-gray-100 dark:bg-slate-700 cursor-not-allowed" />
+                <input type="text" className="w-full border rounded px-2 py-1" value={formData.vendor} onChange={(e) => setFormData({...formData, vendor: e.target.value})} />
               </div>
               <div>
                 <label className="text-sm font-medium">PIC *</label>

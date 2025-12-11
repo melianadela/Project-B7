@@ -136,9 +136,20 @@ export async function GET(request: NextRequest) {
   const eksternal = processed.normalized.map((row) => {
     const kodePart = row.kodepart || row.kode_part || "";
 
-    const track = processedTracking.normalized.find(
-      (t) => (t.kodepart || t.kode_part || "") === kodePart
-    );
+    // Ambil semua tracking yang cocok (bisa lebih dari 1 PR)
+    const trackRows = processedTracking.normalized.filter((t) => {
+      const tKode = (t.kodepart || t.kode_part || "").trim().toLowerCase();
+      const rKode = (kodePart || "").trim().toLowerCase();
+      return tKode === rKode;
+    });
+
+    // Pilih PR yang BELUM selesai
+    let track =
+      trackRows.find(
+        (t) =>
+          !(t.status || "").toLowerCase().includes("selesai") &&
+          !(t.status || "").toLowerCase().includes("diterima")
+      ) || trackRows[trackRows.length - 1] || null;
 
     // default status
     let kanbanStatus = "ignore";
