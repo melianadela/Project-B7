@@ -232,7 +232,6 @@ export default function KanbanExternalPage() {
           tanggal_receipt: r.tanggal_receipt ?? r.TanggalReceipt ?? "",
           no_receipt: r.no_receipt ?? r.NoReceipt ?? "",
         };
-        
         return mapped;
       });
       
