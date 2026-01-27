@@ -83,7 +83,7 @@ const data = {
               { title: "CHIMEI 3A", url: "/dashboard/lifetime/chimei/3A-(ILAPAK 1)" },
               { title: "CHIMEI 4B", url: "/dashboard/lifetime/chimei/4B-(ILAPAK 3, 4)" },
               { title: "CHIMEI 5", url: "/dashboard/lifetime/chimei/5-(ILAPAK 5)" },
-              { title: "CHIMEI 5B", url: "/dashboard/lifetime/chimei/5-(UNIFILL B)" },
+              { title: "CHIMEI 5B", url: "/dashboard/lifetime/chimei/5B-(UNIFILL B)" },
               { title: "CHIMEI 8A", url: "/dashboard/lifetime/chimei/8A-(ILAPAK 8)" },
               { title: "CHIMEI 9A", url: "/dashboard/lifetime/chimei/9A-(ILAPAK 11)" },
               { title: "CHIMEI 10", url: "/dashboard/lifetime/chimei/10-(ILAPAK 2, 12)" },
