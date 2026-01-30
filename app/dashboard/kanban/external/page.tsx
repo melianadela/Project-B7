@@ -1568,6 +1568,7 @@ return;
                       <th className="px-3 py-2 text-center">Sisa Qty di Vendor</th>
                       <th className="px-3 py-2 text-center">On Hand Inventory</th>
                       <th className="px-3 py-2 text-center">Vendor</th>
+                      <th className="px-3 py-2 text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>

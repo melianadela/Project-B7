@@ -112,7 +112,7 @@ const data = {
           {
             title: "FBD",
             items: [
-              { title: "FBD GLAT", url: "/dashboard/lifetime/fbd/glat" },
+              { title: "FBD GLATT", url: "/dashboard/lifetime/fbd/glatt" },
               { title: "FBD 2", url: "/dashboard/lifetime/fbd/2" },
               { title: "FBD 3", url: "/dashboard/lifetime/fbd/3" },
               { title: "FBD 4", url: "/dashboard/lifetime/fbd/4" },
@@ -143,13 +143,22 @@ const data = {
             title: "STORAGE TANK",
             items: [
               { title: "STORAGE TANK 1", url: "/dashboard/lifetime/storage tank/1" },
+              { title: "STORAGE TANK 2", url: "/dashboard/lifetime/storage-tank/2" },
+              { title: "STORAGE TANK 3", url: "/dashboard/lifetime/storage-tank/3" },
+              { title: "STORAGE TANK 4", url: "/dashboard/lifetime/storage-tank/4" },
               { title: "STORAGE TANK 5", url: "/dashboard/lifetime/storage-tank/5" },
-              { title: "STORAGE TANK 8", url: "/dashboard/lifetime/storage-tank/8-(RCL-3)" },
+              { title: "STORAGE TANK 6", url: "/dashboard/lifetime/storage-tank/6" },
+              { title: "STORAGE TANK 7", url: "/dashboard/lifetime/storage-tank/7" },
+              { title: "STORAGE TANK 8", url: "/dashboard/lifetime/storage-tank/8" },
               { title: "STORAGE TANK 9", url: "/dashboard/lifetime/storage-tank/9" },
               { title: "STORAGE TANK 10", url: "/dashboard/lifetime/storage-tank/10" },
+              { title: "STORAGE TANK 11", url: "/dashboard/lifetime/storage-tank/11" },
               { title: "STORAGE TANK 12", url: "/dashboard/lifetime/storage-tank/12" },
-              { title: "STORAGE TANK 13", url: "/dashboard/lifetime/storage-tank/13" },
             ],
+          },
+          {
+            title: "IPAL",
+            url: "/dashboard/lifetime/ipal/_",
           },
           {
             title: "AQUADEMIN",
@@ -175,12 +184,16 @@ const data = {
           {
             title: "CHILLER",
             items: [
+              { title: "CHILLER", url: "/dashboard/lifetime/chiller/_" },
+              { title: "CHILLER DAIKIN", url: "/dashboard/lifetime/chiller/daikin" },
+              { title: "CHILLER HITACHI", url: "/dashboard/lifetime/chiller/hitachi" },
               { title: "CHILLER TRANE", url: "/dashboard/lifetime/chiller/trane" },
             ],
           },
           {
             title: "KOMPRESSOR",
             items: [
+              { title: "KOMPRESSOR", url: "/dashboard/lifetime/kompressor/_" },
               { title: "KOMPRESSOR 2", url: "/dashboard/lifetime/kompressor/2" },
               { title: "KOMPRESSOR 3", url: "/dashboard/lifetime/kompressor/3" },
               { title: "KOMPRESSOR ELGI", url: "/dashboard/lifetime/kompressor/elgi" },
@@ -217,6 +230,7 @@ const data = {
               { title: "AHU 203", url: "/dashboard/lifetime/ahu/ahu-203" },
               { title: "AHU 204", url: "/dashboard/lifetime/ahu/ahu-204" },
               { title: "AHU 205", url: "/dashboard/lifetime/ahu/ahu-205" },
+              { title: "AHU 206", url: "/dashboard/lifetime/ahu/ahu-206" },
               { title: "AHU 207", url: "/dashboard/lifetime/ahu/ahu-207" },
               { title: "AHU 208", url: "/dashboard/lifetime/ahu/ahu-208" },
               { title: "AHU 209", url: "/dashboard/lifetime/ahu/ahu-209" },

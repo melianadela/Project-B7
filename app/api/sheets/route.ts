@@ -67,24 +67,16 @@ function applyFilters(
 
   // 💥 Filter mesin tapi jangan terlalu ketat
   if (machineFilter && machineFilter.toLowerCase() !== "all") {
-    const normalizedMachine = machineFilter.toLowerCase().trim();
+  const normalizedMachine = machineFilter.toLowerCase().trim();
 
-    filteredData = filteredData.filter((item) => {
-      const itemMachine = (item.mesin || "").toLowerCase().trim();
+  filteredData = filteredData.filter((item) => {
+    const itemMachine = (item.mesin || "").toLowerCase().trim();
 
-      // case 1: match persis
-      if (itemMachine === normalizedMachine) return true;
+    // ✅ HARUS SAMA PERSIS
+    return itemMachine === normalizedMachine;
+  });
+}
 
-      // case 2: machineFilter adalah subset dari itemMachine (ex: "ilapak" → "ilapak 1")
-      if (itemMachine.includes(normalizedMachine)) return true;
-
-      // case 3: worksheet name match sebagian
-      const worksheet = (worksheetName || "").toLowerCase().trim();
-      if (worksheet && itemMachine.includes(worksheet)) return true;
-
-      return false;
-    });
-  }
 
   return filteredData;
 }
