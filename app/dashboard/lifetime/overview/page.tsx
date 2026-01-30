@@ -283,7 +283,7 @@ const LifetimeOverviewPage: React.FC = () => {
           Spare part Lifetime Table
         </h3>
         <p className="mb-5 text-sm text-gray-500">{tableSubtitle[activeTab]}</p>
-        <SparepartTable data={filteredData} showMachine worksheet="LIFETIME_OVERVIEW" />
+        <SparepartTable data={filteredData} showMachine isOverview />
       </div>
     </div>
   );

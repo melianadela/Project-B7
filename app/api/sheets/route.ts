@@ -176,11 +176,36 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const sheets = createSheetsClient();
     const { searchParams } = new URL(request.url);
     const worksheetNameRaw = searchParams.get("worksheet") || "Sheet1";
     const kodepart = searchParams.get("kodepart");
     const body = await request.json();
     const tanggalBaru = body.tanggalPenggantianTerakhir;
+    if (body.pemakaian) {
+      const p = body.pemakaian;
+
+      const pemakaianValues = [
+        p.tanggal,
+        p.mesin,
+        p.kode_part,
+        p.part,
+        p.qty_pemakaian || 1,
+        p.keterangan || "",
+        p.operator || "",
+      ];
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: process.env.sheet_id!,
+        range: `PEMAKAIAN_SPAREPART!A:G`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: {
+          values: [pemakaianValues],
+        },
+      });
+    }
+    const normalize = (s: string) =>
+      s.toLowerCase().replace(/\s+/g, "").replace(/[^\w]/g, "");
 
     if (!kodepart || !tanggalBaru) {
       return NextResponse.json(
@@ -196,8 +221,6 @@ export async function PATCH(request: NextRequest) {
     const rangeGet = `'${cleanWorksheet}'!A:Z`;
     console.log("🧾 Worksheet yang dikirim:", JSON.stringify(cleanWorksheet));
     console.log("📏 Range get:", rangeGet);
-
-    const sheets = createSheetsClient();
 
     // 🧪 Tes dulu apakah Google Sheets bisa akses worksheet ini
     try {
@@ -218,31 +241,49 @@ export async function PATCH(request: NextRequest) {
 
     const rows = resp.data.values || [];
 
-    const headerRowIndex = rows.findIndex(
-      (r) =>
-        r.some((cell) =>
-          ["kode", "penggantian", "mesin"].some((k) =>
-            (cell || "").toLowerCase().includes(k)
-          )
-        )
-    );
-    if (headerRowIndex === -1)
-      throw new Error("Header tidak ditemukan dalam sheet");
-
+    // ✅ Header FIX di baris ke-2 (index 1)
+    const headerRowIndex = 1;
     const headerRow = rows[headerRowIndex];
+
+    if (!headerRow) {
+      throw new Error("Header row tidak ditemukan di baris ke-2");
+    }
+
     const kodepartIdx = headerRow.findIndex((h) =>
-      (h || "").toLowerCase().includes("kode")
+      normalize(h || "").includes("kodepart")
     );
+
     const penggantianTerakhirIdx = headerRow.findIndex((h) =>
-      (h || "").toLowerCase().includes("penggantian terakhir")
+      normalize(h || "").includes("penggantianterakhir")
     );
+
+    const mesinIdx = headerRow.findIndex((h) =>
+      normalize(h || "").includes("mesin")
+    );
+
+    if (mesinIdx === -1)
+      throw new Error("Kolom 'Mesin' tidak ditemukan");
 
     if (kodepartIdx === -1 || penggantianTerakhirIdx === -1)
       throw new Error("Kolom 'Kode' atau 'Penggantian Terakhir' tidak ditemukan");
 
-    const targetRow = rows.findIndex(
-      (r) => (r[kodepartIdx] || "").trim() === kodepart.trim()
-    );
+    const machineParam = searchParams.get("machine");
+
+    if (!machineParam) {
+      throw new Error("Parameter machine tidak dikirim dari frontend");
+    }
+
+    const targetMachine = normalize(machineParam);
+    const targetKode = normalize(kodepart);
+
+    const targetRow = rows.findIndex((r, idx) => {
+      if (idx <= headerRowIndex) return false;
+
+      const rowKode = normalize(r[kodepartIdx] || "");
+      const rowMesin = normalize(r[mesinIdx] || "");
+
+      return rowKode === targetKode && rowMesin === targetMachine;
+    });
 
     if (targetRow === -1) {
       return NextResponse.json(

@@ -93,7 +93,8 @@ interface PieChartDistributionProps {
 interface SparepartTableProps {
   data: Sparepart[];
   showMachine?: boolean;
-  worksheet: string;
+  worksheet?: string;
+  isOverview?: boolean;
 }
 
 /* --- Helper UI Labels --- */
@@ -203,6 +204,9 @@ export function MachineStatsCards({
 
         if (result.success) {
           let data = result.data as Sparepart[];
+
+
+
 
           // 🔧 Filter mesin yang sesuai
           if (machine && machine !== "ALL") {
@@ -529,7 +533,7 @@ export function PieChartDistribution({ data }: PieChartDistributionProps) {
 }
 
 /* --- Spare partTable (with export PDF) --- */
-export function SparepartTable({ data, showMachine = false, worksheet }: SparepartTableProps) {
+export function SparepartTable({ data, showMachine = false, worksheet, isOverview = false,}: SparepartTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -537,30 +541,54 @@ export function SparepartTable({ data, showMachine = false, worksheet }: Sparepa
   const [responsibilityFilter, setResponsibilityFilter] = useState("all");
   const [selectedSparepart, setSelectedSparepart] = useState<Sparepart | null>(null);
   const [tanggalPelaksanaan, setTanggalPelaksanaan] = useState("");
+  const [qtyPemakaian, setQtyPemakaian] = useState(1);
+  const [keteranganPemakaian, setKeteranganPemakaian] = useState("");
+  const [operatorPemakaian, setOperatorPemakaian] = useState("");
   const [showTanggalModal, setShowTanggalModal] = useState(false);
   const itemsPerPage = 10;
 
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchTerm, categoryFilter, statusFilter, responsibilityFilter]);
+
 async function handleSubmitTanggal() {
+  if (isOverview) return;
   if (!selectedSparepart || !tanggalPelaksanaan) {
     alert("Mohon isi tanggal pelaksanaan.");
     return;
   }
 
   try {
+    if (!worksheet) {
+      alert("Worksheet tidak tersedia untuk update data.");
+      return;
+    }
+
     const res = await fetch(
-  `/api/sheets?worksheet=${encodeURIComponent(worksheet)}&kodepart=${selectedSparepart.kodepart}`,
+      `/api/sheets?worksheet=${encodeURIComponent(worksheet)}&kodepart=${encodeURIComponent(
+        selectedSparepart.kodepart
+      )}&machine=${encodeURIComponent(selectedSparepart.mesin)}`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tanggalPenggantianTerakhir: tanggalPelaksanaan,
+          pemakaian: {
+            tanggal: tanggalPelaksanaan,
+            mesin: selectedSparepart.mesin,
+            kode_part: selectedSparepart.kodepart,
+            part: selectedSparepart.part,
+            qty_pemakaian: 1, 
+            keterangan: keteranganPemakaian,
+            operator: operatorPemakaian,
+          },
         }),
       }
     );
 
     const result = await res.json();
     if (result.success) {
-      alert(`✅ Data ${selectedSparepart.kodepart} berhasil diperbarui`);
+      alert(`✅ Data penggantian & pemakaian ${selectedSparepart.kodepart } berhasil dicatat`);
       setShowTanggalModal(false);
       window.location.reload();
     } else {
@@ -651,6 +679,7 @@ async function handleSubmitTanggal() {
         <Table>
           <TableHeader>
             <TableRow>
+          
               {showMachine && <TableHead>Machine</TableHead>}
               <TableHead className="text-center">Code</TableHead>
               <TableHead className="text-center">Name</TableHead>
@@ -660,7 +689,7 @@ async function handleSubmitTanggal() {
               <TableHead className="text-center">Next Replace</TableHead>
               <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-center">Responsibility</TableHead>
-              <TableHead className="text-center">Action</TableHead>
+              {!isOverview && <TableHead className="text-center">Action</TableHead>}
             </TableRow>
           </TableHeader>
 
@@ -676,20 +705,22 @@ async function handleSubmitTanggal() {
                 <TableCell className="text-center">{sp.penggantianselanjutnya}</TableCell>
                 <TableCell><StatusLabel status={sp.status} /></TableCell>
                 <TableCell className="text-center"><ResponsibilityLabel responsibility={sp.tanggungjawab} /></TableCell>
-                <TableCell className="flex justify-center items-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                    onClick={() => {
-                      setSelectedSparepart(sp);
-                      setTanggalPelaksanaan("");
-                      setShowTanggalModal(true);
-                    }}
-                  >
-                    Sudah Dilakukan
-                  </Button>
-                </TableCell>
+                {!isOverview && (
+                  <TableCell className="flex justify-center items-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        setSelectedSparepart(sp);
+                        setTanggalPelaksanaan("");
+                        setShowTanggalModal(true);
+                      }}
+                    >
+                      Penggantian Spare Part
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -702,17 +733,40 @@ async function handleSubmitTanggal() {
             <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Next</Button>
           </div>
         )}
-        {showTanggalModal && (
+        {!isOverview && showTanggalModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-lg w-[400px]">
               <h3 className="text-lg font-semibold mb-4">
-                Tanggal Pelaksanaan - {selectedSparepart?.kodepart}
+                Tanggal Penggantian - {selectedSparepart?.kodepart}
               </h3>
               <input
                 type="date"
                 value={tanggalPelaksanaan}
                 onChange={(e) => setTanggalPelaksanaan(e.target.value)}
                 className="w-full border rounded-md px-3 py-2 mb-4"
+              />
+              <input
+                type="number"
+                min={1}
+                value={qtyPemakaian}
+                onChange={(e) => setQtyPemakaian(Number(e.target.value))}
+                className="w-full border rounded-md px-3 py-2 mb-4"
+                placeholder="Qty Pemakaian"
+              />
+
+              <input
+                type="text"
+                value={keteranganPemakaian}
+                onChange={(e) => setKeteranganPemakaian(e.target.value)}
+                className="w-full border rounded-md px-3 py-2 mb-4"
+                placeholder="Keterangan Pemakaian"
+              />
+              <input
+                type="text"
+                value={operatorPemakaian}
+                onChange={(e) => setOperatorPemakaian(e.target.value)}
+                className="w-full border rounded-md px-3 py-2 mb-4"
+                placeholder="Operator"
               />
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setShowTanggalModal(false)}>

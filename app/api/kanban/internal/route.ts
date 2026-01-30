@@ -201,62 +201,31 @@ export async function POST(request: NextRequest) {
     const payload = body.payload ?? body;
     const sheets = createSheetsClient();
 
-  // 🔍 DETEKSI INPUT PEMAKAIAN (lebih kuat & compatible)
-  const isPemakaian =
-    payload?.formType === "pemakaian" ||
-    typeof payload.qty_pemakaian !== "undefined";
-
-  if (isPemakaian) {
-    const now = new Date();
-    const tanggal = payload.tanggal || now.toISOString().split("T")[0];
-
-    const values = [
-      tanggal,                                 // A
-      "INTERNAL",                               // B
-      payload.kode_part || payload.kodepart || "", // C
-      payload.part || "",                       // D
-      payload.qty_pemakaian || "",              // E
-      payload.keterangan || "",                 // F
-      payload.operator || "",                   // G
-    ];
-
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: process.env.sheet_id!,
-      range: `PEMAKAIAN_SPAREPART!A:G`,
-      valueInputOption: "USER_ENTERED",
-      requestBody: { values: [values] },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: "Pencatatan pemakaian berhasil disimpan",
-      values,
-    });
-  }
-
     // Build values according to KANBAN_TRACKING columns (A: Tanggal, B: PR, C: Tanggal PR, D: PO, E: Tanggal PO, F: Tipe Kanban, G: Kode Part, H: Part, ... up to U)
+    const today = new Date().toISOString().split("T")[0];
+
     const values = [
-      payload.Tanggal ?? new Date().toISOString().split("T")[0],
-      payload.PR ?? `PR-${Date.now()}`,
-      payload.tanggalpr ?? new Date().toISOString().split("T")[0],
-      "", // PO
-      "", // Tanggal PO
-      payload["Tipe Kanban"] ?? "INTERNAL",
-      payload["Kode Part"] ?? payload.kodepart ?? "",
-      payload.Part ?? payload.part ?? "",
-      payload["Untuk Bulan"] ?? payload.untuk_bulan ?? "", // 🟢 ambil otomatis dari internal
-      payload["Qty Order"] ?? payload.qty_kebutuhan_reorder ?? "", // 🟢 default dari internal
-      payload.UOM ?? "",
-      payload.Satuan ?? "",
-      payload.Harga ?? "",
-      payload.Supplier ?? "",
-      payload.LeadTime ?? payload.leadtime ?? "",
-      payload.ETA ?? "",
-      "", // tanggal receipt
-      "", // no receipt
-      payload.Status ?? "PR Dibuat",
-      payload.Keterangan ?? "",
-      payload.PIC ?? "",
+      payload.tanggal_pr || today,                 // A Tanggal PR
+      payload.PR || `PR-${Date.now()}`,             // B PR
+      payload.tanggal || today,                    // C Tanggal
+      "",                                          // D PO
+      "",                                          // E Tanggal PO
+      "INTERNAL",                                  // F Tipe Kanban
+      payload.kodepart || payload.kode_part || "", // G Kode Part
+      payload.part || "",                           // H Part
+      payload.untuk_bulan || "",                   // I Untuk Bulan
+      payload.qty_order || payload.qty || "",      // J Qty Order
+      payload.uom || "",                            // K UOM
+      payload.satuan || "",                         // L Satuan
+      "",                                          // M Harga
+      payload.supplier || "",                      // N Supplier
+      payload.leadtime || "",                      // O Lead time
+      payload.eta || "",                            // P ETA
+      "",                                          // Q Tanggal Receipt
+      "",                                          // R No Receipt
+      "PR Dibuat",                                 // S Status
+      payload.keterangan || "",                    // T Keterangan
+      payload.pic || "",                            // U PIC
     ];
 
     await sheets.spreadsheets.values.append({

@@ -101,18 +101,20 @@ export default function KanbanInternalPage() {
   });
   const [rowReceipt, setRowReceipt] = useState<KanbanRow | null>(null);
 
-  // Pemakaian form (important: state must be defined top-level)
-  const [showPemakaianForm, setShowPemakaianForm] = useState(false);
-  const [formPemakaian, setFormPemakaian] = useState({
-    tanggal: "",
-    tipe_kanban: "INTERNAL",
-    kode_part: "",
-    part: "",
-    qty_pemakaian: "",
-    keterangan: "",
-    operator: "",
-  });
-
+  const bulanOptions = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
   // UOM options (same as eksternal)
   const uomOptions = [
     "EA", "PCS", "SET", "BOX", "PACK", "LITER", "KG", "M", "CM", "UNIT", "..Others"
@@ -478,53 +480,6 @@ const completed = useMemo(() => {
     }
   }
 
-  // ----------------- Submit pemakaian -----------------
-  async function submitPemakaian() {
-    if (!formPemakaian.tanggal || !formPemakaian.kode_part || !formPemakaian.qty_pemakaian) {
-      alert("⚠️ Isi minimal Tanggal, Kode Part, dan Qty Pemakaian!");
-      return;
-    }
-    try {
-      const payload = {
-        payload: {
-          tanggal: formPemakaian.tanggal,
-          tipe_kanban: formPemakaian.tipe_kanban,
-          kode_part: formPemakaian.kode_part,
-          part: formPemakaian.part,
-          qty_pemakaian: formPemakaian.qty_pemakaian,
-          keterangan: formPemakaian.keterangan,
-          operator: formPemakaian.operator,
-        },
-      };
-      const res = await fetch("/api/kanban", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (json.success) {
-        alert("✅ Data pemakaian berhasil disimpan!");
-        setShowPemakaianForm(false);
-        setFormPemakaian({
-          tanggal: "",
-          tipe_kanban: "INTERNAL",
-          kode_part: "",
-          part: "",
-          qty_pemakaian: "",
-          keterangan: "",
-          operator: "",
-        });
-        await fetchData();
-      } else {
-        alert("❌ Gagal simpan ke sheet, cek console.");
-        console.error(json);
-      }
-    } catch (err) {
-      console.error("submitPemakaian error", err);
-      alert("❌ Error kirim data ke API.");
-    }
-  }
-
   // ----------------- Exports -----------------
   const exportExcel = () => {
     const header = [
@@ -766,7 +721,6 @@ const completed = useMemo(() => {
                   <th className="px-4 py-2 text-center">Supplier</th>
                   <th className="px-4 py-2 text-center">Status</th>
                   <th className="px-4 py-2 text-center">PR</th>
-                  <th className="px-4 py-2 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -883,7 +837,18 @@ const completed = useMemo(() => {
               </div>
               <div>
                 <label className="text-sm font-medium">Untuk Bulan *</label>
-                <input type="text" className="w-full border rounded px-2 py-1" value={formData.bulan} onChange={(e) => setFormData({...formData, bulan: e.target.value})} />
+                <select
+                  className="w-full border rounded px-2 py-1 bg-white dark:bg-slate-800"
+                  value={formData.bulan}
+                  onChange={(e) => setFormData({ ...formData, bulan: e.target.value })}
+                >
+                  <option value="">-- Pilih Bulan --</option>
+                  {bulanOptions.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
@@ -1081,7 +1046,6 @@ const completed = useMemo(() => {
                     <th className="px-3 py-2 text-center">Reorder Max</th>
                     <th className="px-3 py-2 text-center">On Hand Inventory</th>
                     <th className="px-3 py-2 text-center">Vendor</th>
-                    <th className="px-3 py-2 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1155,24 +1119,6 @@ const completed = useMemo(() => {
                                 Buat PR
                               </Button>
                             )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setFormPemakaian({
-                                tanggal: new Date().toISOString().slice(0, 10),
-                                tipe_kanban: "INTERNAL",
-                                kode_part: r.kodepart || "",
-                                part: r.part || "",
-                                qty_pemakaian: "",
-                                keterangan: "",
-                                operator: "",
-                              });
-                              setShowPemakaianForm(true);
-                            }}
-                          >
-                            Input Pemakaian
-                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -1185,46 +1131,6 @@ const completed = useMemo(() => {
               <Button variant="outline" onClick={() => setShowListModal(null)}>
                 ❌ Close
               </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Input Pemakaian */}
-      {showPemakaianForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg p-6 w-[400px] text-slate-900 dark:text-slate-100">
-            <h2 className="text-lg font-bold mb-4">Input Pemakaian Sparepart</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium">Tanggal *</label>
-                <input type="date" className="w-full border rounded px-2 py-1" value={formPemakaian.tanggal} onChange={(e) => setFormPemakaian({...formPemakaian, tanggal: e.target.value})} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Kode Part *</label>
-                <input type="text" readOnly value={formPemakaian.kode_part} className="w-full border rounded px-2 py-1 bg-gray-100 dark:bg-slate-700 cursor-not-allowed" />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Nama Part</label>
-                <input type="text" readOnly value={formPemakaian.part} className="w-full border rounded px-2 py-1 bg-gray-100 dark:bg-slate-700 cursor-not-allowed" />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Qty Pemakaian *</label>
-                <input type="number" className="w-full border rounded px-2 py-1" value={formPemakaian.qty_pemakaian} onChange={(e)=>setFormPemakaian({...formPemakaian, qty_pemakaian: e.target.value})} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Keterangan</label>
-                <input type="text" className="w-full border rounded px-2 py-1" value={formPemakaian.keterangan} onChange={(e)=>setFormPemakaian({...formPemakaian, keterangan: e.target.value})} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Operator</label>
-                <input type="text" className="w-full border rounded px-2 py-1" value={formPemakaian.operator} onChange={(e)=>setFormPemakaian({...formPemakaian, operator: e.target.value})} />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="ghost" onClick={() => setShowPemakaianForm(false)}>Batal</Button>
-              <Button className="bg-blue-600 text-white" onClick={submitPemakaian}>Simpan</Button>
             </div>
           </div>
         </div>

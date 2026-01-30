@@ -206,37 +206,6 @@ export async function POST(request: NextRequest) {
     const payload = body.payload ?? body;
     const sheets = createSheetsClient();
 
-    // deteksi otomatis: kalau ada field qty_pemakaian → berarti form pemakaian
-    const isPemakaian = !!payload.qty_pemakaian || !!payload.operator;
-
-    if (isPemakaian) {
-      // 🧾 kirim ke sheet KANBAN_PEMAKAIAN
-      const now = new Date();
-      const tanggal = payload.tanggal || now.toISOString().split("T")[0];
-      const values = [
-        tanggal,                            // A: tanggal
-        payload.tipe_kanban || "EKSTERNAL", // B
-        payload.kode_part || "",             // C
-        payload.part || "",                  // D
-        payload.qty_pemakaian || "",         // E
-        payload.keterangan || "",            // F
-        payload.operator || "",              // G
-      ];
-
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: process.env.sheet_id!,
-        range: `PEMAKAIAN_SPAREPART!A:G`,
-        valueInputOption: "USER_ENTERED",
-        requestBody: { values: [values] },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: "✅ Data pemakaian berhasil ditambahkan ke KANBAN_PEMAKAIAN",
-        values,
-      });
-    }
-
     // ✳️ selain itu tetap ke sheet KANBAN_TRACKING (buat PR/PO)
     const values = [
       payload.Tanggal ?? new Date().toISOString().split("T")[0],
